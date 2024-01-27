@@ -65,8 +65,8 @@ namespace GameSDK.Plugins.YaGames.PlayerData
         public async Task SignIn()
         {
 #if !UNITY_EDITOR
-            YaGamesGetPlayer(true, OnSuccess, OnError);
             _status = InitializationStatus.Waiting;
+            YaGamesGetPlayer(true, OnSuccess, OnError);
             
             while (_status == InitializationStatus.Waiting)
                 await Task.Yield();
@@ -78,8 +78,8 @@ namespace GameSDK.Plugins.YaGames.PlayerData
                     Debug.LogWarning($"[GameSDK.Authentication]: Attempt to get a local id!");
                 }
                 
-                YaGamesGetPlayer(false, OnSuccess, OnError);
                 _status = InitializationStatus.Waiting;
+                YaGamesGetPlayer(false, OnSuccess, OnError);
             }
             else
             {
@@ -135,8 +135,8 @@ namespace GameSDK.Plugins.YaGames.PlayerData
         public async Task SignInAsGuest()
         {
 #if !UNITY_EDITOR
-            YaGamesGetPlayer(false, OnSuccess, OnError);
             _status = InitializationStatus.Waiting;
+            YaGamesGetPlayer(false, OnSuccess, OnError);
 
             while (_status == InitializationStatus.Waiting)
                 await Task.Yield();
@@ -252,6 +252,7 @@ namespace GameSDK.Plugins.YaGames.PlayerData
         public async Task<StorageStatus> Save(string key, string value)
         {
 #if !UNITY_EDITOR
+
             if (InitializationStatus != InitializationStatus.Initialized)
             {
                 await Auth.SignInAsGuest();
@@ -267,8 +268,8 @@ namespace GameSDK.Plugins.YaGames.PlayerData
                 return StorageStatus.Error;
             }
 
-            YaGamesSaveData(key, value, OnSuccess, OnError);
             _lastStorageStatus = StorageStatus.Waiting;
+            YaGamesSaveData(key, value, OnSuccess, OnError);
 
             while (_lastStorageStatus == StorageStatus.Waiting)
                 await Task.Yield();
@@ -306,6 +307,7 @@ namespace GameSDK.Plugins.YaGames.PlayerData
         public async Task<(StorageStatus, string)> Load(string key)
         {
 #if !UNITY_EDITOR
+
             if (InitializationStatus != InitializationStatus.Initialized)
             {
                 await Auth.SignInAsGuest();
@@ -321,8 +323,8 @@ namespace GameSDK.Plugins.YaGames.PlayerData
                 return (StorageStatus.Error, string.Empty);
             }
 
-            YaGamesLoadData(key, OnSuccess, OnError);
             _lastStorageStatus = StorageStatus.Waiting;
+            YaGamesLoadData(key, OnSuccess, OnError);
 
             while (_lastStorageStatus == StorageStatus.Waiting)
                 await Task.Yield();
@@ -331,7 +333,7 @@ namespace GameSDK.Plugins.YaGames.PlayerData
             {
                 return (_lastStorageStatus, _lastStorageData);
             }
-            
+
             return (_lastStorageStatus, string.Empty);
 #else
             _lastStorageStatus = StorageStatus.Waiting;

@@ -78,7 +78,14 @@ namespace GameSDK.GameStorage
             {
                 try
                 {
-                    statuses.Add(await service.Value.Save(key, value));
+                    var result = await service.Value.Save(key, value);
+                    
+                    if (GameApp.IsDebugMode)
+                    {
+                        Debug.Log($"[GameSDK.Storage]: Saving status {service.Key}: {result}");
+                    }
+
+                    statuses.Add(result);
                 }
                 catch (Exception e)
                 {
@@ -139,7 +146,14 @@ namespace GameSDK.GameStorage
             {
                 try
                 {
-                    statuses.Add(await service.Value.Load(key));
+                    var result = await service.Value.Load(key);
+                    
+                    if (GameApp.IsDebugMode)
+                    {
+                        Debug.Log($"[GameSDK.Storage]: Load result {service.Key}: {result}");
+                    }
+                    
+                    statuses.Add(result);
                 }
                 catch (Exception e)
                 {

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using GameSDK.Advertisement;
 using GameSDK.Authentication;
 using GameSDK.Core;
@@ -48,6 +49,8 @@ namespace Test
         [SerializeField] private TMP_InputField _leaderboardScore;
 
         [SerializeField] private List<LocalizationDatabase> _databasesLocalizations = new List<LocalizationDatabase>();  
+        [SerializeField] private List<TMP_InputField> _inputFieldsKeysSave = new List<TMP_InputField>();  
+        [SerializeField] private List<TMP_InputField> _inputFieldsValuesSave = new List<TMP_InputField>();  
 
 
         private List<LeaderboardEntityElement> _leaderboardEntities = new();
@@ -238,7 +241,32 @@ namespace Test
         {
             var key = _inputFieldKey.text;
             var data = await Storage.Load(key);
+            
             _inputFieldValue.text = data.Item1 == StorageStatus.Success ? data.Item2 : "Fail Loading";
+        }
+
+        public async void PocketSave()
+        {
+            for (int i = 0; i < _inputFieldsKeysSave.Count; i++)
+            {
+                var key = _inputFieldsKeysSave[i].text;
+                var value = _inputFieldsValuesSave[i].text;
+                
+                if(string.IsNullOrEmpty(key))
+                    continue;
+                
+                await Storage.Save(key, value);
+            }
+        }
+        
+        public async void PocketLoad()
+        {
+            for (int i = 0; i < _inputFieldsKeysSave.Count; i++)
+            {
+                var key = _inputFieldsKeysSave[i].text;
+                var data = await Storage.Load(key);
+                _inputFieldsValuesSave[i].text = data.Item1 == StorageStatus.Success ? data.Item2 : "Fail Loading";
+            }
         }
 
         public async void CanReview()

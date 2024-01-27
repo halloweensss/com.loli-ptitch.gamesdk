@@ -6,6 +6,7 @@
         Leaderboard: undefined,
         Purchases: undefined,
         IsInitialized: false,
+        SaveDataObject: {},
         
         Initialize: function (callbackSuccess, callbackError) {
             window['YaGames']
@@ -43,26 +44,30 @@
             return jsonUnity;
         },
         
-        InitPlayer: function (signed){
+        InitPlayer: function (signed) {
             return yaGames.SDK.getPlayer({signed: signed})
                 .then(player => {
                     yaGames.Player = player;
-                    
                     return player;
                 });
         },
 
         GetPlayer: function (signed, callbackSuccess, callbackError) {
             yaGames.InitPlayer(signed)
-                .then(player => {
+                .then(async player => {
                     yaGames.Player = player;
+
+                    await yaGames.LoadAllData();
                     
                     if(player.getMode() === 'lite' && signed){
                         console.error("Player is not login to yandex!");
                         yaGames.SDK.auth.openAuthDialog().then(() => {
                             yaGames.InitPlayer(signed)
-                                .then(player => {
+                                .then(async player => {
                                     yaGames.Player = player;
+
+                                    await yaGames.LoadAllData();
+                                    
                                     dynCall('v', callbackSuccess, []);
                                     return;
                                 })
@@ -111,9 +116,8 @@
         },
 
         SaveData: function (key, value, callbackSuccess, callbackError) {
-            const obj = {};
-            obj[UTF8ToString(key)] = UTF8ToString(value);
-            yaGames.Player.setData(obj, true).then(() => {
+            yaGames.SaveDataObject[UTF8ToString(key)] = UTF8ToString(value);
+            yaGames.Player.setData(yaGames.SaveDataObject, true).then(() => {
                 dynCall('v', callbackSuccess, []);
             }).catch(e => {
                 dynCall('v', callbackError, []);
@@ -122,14 +126,45 @@
         
         LoadData: function (key, callbackSuccess, callbackError) {
             const keyStr = UTF8ToString(key);
-            var array = [keyStr];
+
+            if(keyStr in yaGames.SaveDataObject) {
+
+                const obj = yaGames.SaveDataObject;
+                const result = obj[keyStr];
+
+                if (result !== undefined) {
+                    const dataString = yaGames.GetAllocatedString(obj[keyStr]);
+                    dynCall('vi', callbackSuccess, [dataString]);
+                    _free(dataString);
+                    return;
+                }
+            }
+
+            const array = [keyStr];
+            
             yaGames.Player.getData(array).then(data => {
                 const obj = data;
-                const dataString = yaGames.GetAllocatedString(obj[keyStr]);
+                const result = obj[keyStr];
+
+                if(result === undefined){
+
+                    dynCall('v', callbackError, []);
+                    return;
+                }
+                
+                yaGames.SaveDataObject[keyStr] = result;
+                const dataString = yaGames.GetAllocatedString(result);
                 dynCall('vi', callbackSuccess, [dataString]);
                 _free(dataString);
             }).catch(e => {
                 dynCall('v', callbackError, []);
+            });
+        },
+        
+        LoadAllData: function () {
+            return yaGames.Player.getData().then(data => {
+                yaGames.SaveDataObject = data;
+            }).catch(e => {
             });
         },
         
@@ -242,8 +277,6 @@
             yaGames.SDK.shortcut.canShowPrompt().then(prompt => {
                 if(prompt.canShow){
                     yaGames.SDK.shortcut.showPrompt().then(result => {
-                        console.log(result);
-                        console.log(result.outcome);
                         if(result.outcome === 'accepted'){
                             dynCall('v', callbackOnSuccess, []);
                         }else{
@@ -417,7 +450,6 @@
                     return;
                 })
                 .catch(e => {
-                    console.log(e);
                     const dataString = yaGames.GetAllocatedString(e);
                     dynCall('vi', callbackOnError, [e]);
                     _free(dataString);
