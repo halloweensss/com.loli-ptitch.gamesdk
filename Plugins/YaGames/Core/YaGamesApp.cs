@@ -136,11 +136,11 @@ namespace GameSDK.Plugins.YaGames.Core
                 },
                 browser = new YaBrowser()
                 {
-                    lang = "us"
+                    lang = "en"
                 },
                 i18n = new YaI18n()
                 {
-                    lang = "us",
+                    lang = "en",
                     tld = "com"
                 }
             };

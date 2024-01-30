@@ -68,7 +68,7 @@ namespace GameSDK.Core
                 return _services.First().Value.Lang;
             }
 
-            return "us";
+            return "en";
         }
         
         private string GetPayload()

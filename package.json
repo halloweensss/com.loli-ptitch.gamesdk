@@ -1,6 +1,6 @@
 {
   "name": "com.cucumber.gamesdk",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "displayName": "Game SDK",
   "description": "Some services for your game",
   "repository": {
