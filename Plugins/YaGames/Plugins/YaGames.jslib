@@ -117,7 +117,11 @@
 
         SaveData: function (key, value, callbackSuccess, callbackError) {
             yaGames.SaveDataObject[UTF8ToString(key)] = UTF8ToString(value);
-            yaGames.Player.setData(yaGames.SaveDataObject, true).then(() => {
+            dynCall('v', callbackSuccess, []);
+        },
+
+        SaveDataAll: function (callbackSuccess, callbackError) {
+            yaGames.Player.setData(yaGames.SaveDataObject, false).then(() => {
                 dynCall('v', callbackSuccess, []);
             }).catch(e => {
                 dynCall('v', callbackError, []);
@@ -556,6 +560,10 @@
     
     YaGamesSaveData: function(key, value, callbackSuccess, callbackError){
         yaGames.SaveData(key, value, callbackSuccess, callbackError);
+    },
+    
+    YaGamesSaveDataAll: function(callbackSuccess, callbackError){
+        yaGames.SaveDataAll(callbackSuccess, callbackError);
     },
     
     YaGamesLoadData: function(key, callbackSuccess, callbackError){

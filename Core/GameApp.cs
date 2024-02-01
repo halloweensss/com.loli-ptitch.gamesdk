@@ -10,11 +10,12 @@ namespace GameSDK.Core
     public class GameApp
     {
         private static GameApp _instance;
-        
+
+        private GameAppRunner _runner;
         private InitializationStatus _initializationStatus = InitializationStatus.None;
         private Dictionary<PlatformServiceType, ICoreApp> _services = new Dictionary<PlatformServiceType, ICoreApp>();
         internal static GameApp Instance => _instance ??= new GameApp();
-
+        internal static GameAppRunner Runner => _instance._runner;
         public static DeviceType DeviceType => Instance.GetDeviceType();
         public static string Lang => Instance.GetLang();
         public static string AppId => Instance.GetAppId();
@@ -41,6 +42,16 @@ namespace GameSDK.Core
             if (IsDebugMode)
             {
                 Debug.Log($"[GameSDK]: Platform {app.PlatformService} is registered!");
+            }
+        }
+        
+        internal void RegisterRunner(GameAppRunner runner)
+        {
+            _runner = runner;
+
+            if (IsDebugMode)
+            {
+                Debug.Log($"[GameSDK]: Runner is registered!");
             }
         }
 

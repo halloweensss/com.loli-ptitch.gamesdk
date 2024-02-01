@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using AOT;
@@ -19,6 +21,7 @@ namespace GameSDK.Plugins.YaGames.PlayerData
         private SignInType _signInType = SignInType.None;
         private string _id = string.Empty;
         private string _name = string.Empty;
+        private Coroutine _coroutineDelayedSave = null;
         
         public PlatformServiceType PlatformService => PlatformServiceType.YaGames;
         public InitializationStatus InitializationStatus => _status;
@@ -282,15 +285,27 @@ namespace GameSDK.Plugins.YaGames.PlayerData
             await Task.CompletedTask;
             return _lastStorageStatus;
 #endif
-            
+
             [MonoPInvokeCallback(typeof(Action))]
             static void OnSuccess()
             {
                 _instance._lastStorageStatus = StorageStatus.Success;
-                if (GameApp.IsDebugMode)
+
+                var runner = GameApp.Runner;
+
+                if (runner != null)
                 {
-                    Debug.Log($"[GameSDK.Storage]: Data saved in the YaPlayerData!");
+                    _instance._coroutineDelayedSave ??= runner.StartCoroutine(DelayedSave());
+                    return;
                 }
+
+
+#if !UNITY_EDITOR
+                YaGamesSaveDataAll(OnSuccessAll, OnErrorAll);
+                return;
+#endif
+                OnSuccessAll();
+                return;
             }
 
             [MonoPInvokeCallback(typeof(Action))]
@@ -300,6 +315,38 @@ namespace GameSDK.Plugins.YaGames.PlayerData
                 if (GameApp.IsDebugMode)
                 {
                     Debug.LogWarning($"[GameSDK.Storage]: Failed to save data in the YaPlayerData!");
+                }
+            }
+            
+            static IEnumerator DelayedSave()
+            {
+                yield return new WaitForSeconds(1f);
+
+#if !UNITY_EDITOR
+                YaGamesSaveDataAll(OnSuccessAll, OnErrorAll);
+                _instance._coroutineDelayedSave = null;
+                yield break;
+#endif
+                OnSuccessAll();
+                _instance._coroutineDelayedSave = null;
+                yield break;
+            }
+
+            [MonoPInvokeCallback(typeof(Action))]
+            static void OnSuccessAll()
+            {
+                if (GameApp.IsDebugMode)
+                {
+                    Debug.Log($"[GameSDK.Storage]: Data saved all in the YaPlayerData!");
+                }
+            }
+            
+            [MonoPInvokeCallback(typeof(Action))]
+            static void OnErrorAll()
+            {
+                if (GameApp.IsDebugMode)
+                {
+                    Debug.LogWarning($"[GameSDK.Storage]: Failed to save data all in the YaPlayerData!");
                 }
             }
         }
@@ -393,6 +440,8 @@ namespace GameSDK.Plugins.YaGames.PlayerData
         
         [DllImport("__Internal")]
         private static extern string YaGamesSaveData(string key, string value, Action onSuccess, Action onError);
+        [DllImport("__Internal")]
+        private static extern string YaGamesSaveDataAll(Action onSuccess, Action onError);
         
         [DllImport("__Internal")]
         private static extern string YaGamesLoadData(string key, Action<string> onSuccess, Action onError);
