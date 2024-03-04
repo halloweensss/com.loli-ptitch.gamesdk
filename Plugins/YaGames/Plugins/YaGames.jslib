@@ -493,6 +493,67 @@
                     return;
                 });
         },
+
+        RemoteConfigsInitialize: function(callbackOnSuccess, callbackOnError) {
+            yaGames.SDK.getFlags().then(flags => {
+                
+                let jsonArray = [];
+                
+                for (let key in flags) {
+                    let value = flags[key];
+                    jsonArray.push({ "key": key, "value": value });
+                }
+
+                let data = {data : jsonArray};
+                
+                let jsonResult = JSON.stringify(data);
+
+                const dataString = yaGames.GetAllocatedString(jsonResult);
+                
+                dynCall('vi', callbackOnSuccess, [dataString]);
+                _free(dataString);
+                return;
+            }).catch(e => {
+                    const dataString = yaGames.GetAllocatedString(e);
+                    dynCall('vi', callbackOnError, [e]);
+                    _free(dataString);
+                    return;
+            });
+        },
+        
+        RemoteConfigsInitializeWithClientParameters: function(parameters, callbackOnSuccess, callbackOnError) {
+            const parametersStr = UTF8ToString(parameters);
+            const parametersObj = JSON.parse(parametersStr).data;
+            let convertedArray = parametersObj.map(item => {
+                return { "name": item.key, "value": item.value };
+            });
+            
+            yaGames.SDK.getFlags({
+                defaultFlags: {},
+                clientFeatures: convertedArray}).then(flags => {
+                let jsonArray = [];
+
+                for (let key in flags) {
+                    let value = flags[key];
+                    jsonArray.push({ "key": key, "value": value });
+                }
+                
+                let data = {data : jsonArray};
+
+                let jsonResult = JSON.stringify(data);
+
+                const dataString = yaGames.GetAllocatedString(jsonResult);
+
+                dynCall('vi', callbackOnSuccess, [dataString]);
+                _free(dataString);
+                return;
+            }).catch(e => {
+                    const dataString = yaGames.GetAllocatedString(e);
+                    dynCall('vi', callbackOnError, [e]);
+                    _free(dataString);
+                    return;
+            });
+        },
         
         GetBannerErrorType: function (reason){
             switch (reason){
@@ -640,6 +701,14 @@
    
     YaPurchasesConsume: function (token, callbackSuccess, callbackError){
         yaGames.PurchasesConsume(token, callbackSuccess, callbackError);
+    },
+
+    YaRemoteConfigsInitialize: function (callbackSuccess, callbackError){
+        yaGames.RemoteConfigsInitialize(callbackSuccess, callbackError);
+    },
+
+    YaRemoteConfigsInitializeWithClientParameters: function (parameters, callbackSuccess, callbackError){
+        yaGames.RemoteConfigsInitializeWithClientParameters(parameters, callbackSuccess, callbackError);
     },
 }
 

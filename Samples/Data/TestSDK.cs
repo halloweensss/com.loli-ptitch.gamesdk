@@ -9,6 +9,7 @@ using GameSDK.GameStorage;
 using GameSDK.Leaderboard;
 using GameSDK.Localization;
 using GameSDK.Purchases;
+using GameSDK.RemoteConfigs;
 using GameSDK.Shortcut;
 using TMPro;
 using UnityEngine;
@@ -50,8 +51,12 @@ namespace Test
 
         [SerializeField] private List<LocalizationDatabase> _databasesLocalizations = new List<LocalizationDatabase>();  
         [SerializeField] private List<TMP_InputField> _inputFieldsKeysSave = new List<TMP_InputField>();  
-        [SerializeField] private List<TMP_InputField> _inputFieldsValuesSave = new List<TMP_InputField>();  
+        [SerializeField] private List<TMP_InputField> _inputFieldsValuesSave = new List<TMP_InputField>();
 
+        [SerializeField] private TMP_InputField _inputFieldsFlags;
+
+        [SerializeField] private TMP_InputField _inputFieldRemoteUserPropertiesId;
+        [SerializeField] private TMP_InputField _inputFieldRemoteUserPropertiesValue;
 
         private List<LeaderboardEntityElement> _leaderboardEntities = new();
         private List<PurchaseEntityElement> _purchasesEntities = new();
@@ -65,6 +70,11 @@ namespace Test
             Auth.OnSignIn += OnSignIn;
             Leaderboard.OnInitialized += OnLeaderboardInitialized;
             Purchases.OnInitialized += OnPurchasesInitialized;
+            
+            RemoteConfigs.SetDefaultValue("4", 4);
+            RemoteConfigs.SetDefaultValue("5", "5");
+            RemoteConfigs.SetDefaultValue("6", true);
+            
             SubscribeInterstitial();
             SubscribeRewarded();
             SubscribeBanner();
@@ -469,6 +479,37 @@ namespace Test
             {
                 Debug.Log($"[Purchase]: Purchased product {purchase.Id}");
             }
+        }
+
+        public async void InitializeRemoteConfigs()
+        {
+            await RemoteConfigs.Initialize();
+
+            string values = string.Empty;
+            
+            foreach (var (key, value) in RemoteConfigs.RemoteValues)
+            {
+                values += $"{key}: {value} | {value.Source}\n";
+            }
+
+            _inputFieldsFlags.text = values;
+        }
+        
+        public async void InitializeRemoteConfigsWithParameters()
+        {
+            if(string.IsNullOrEmpty(_inputFieldRemoteUserPropertiesId.text) || string.IsNullOrEmpty(_inputFieldRemoteUserPropertiesValue.text))
+                return;
+            
+            await RemoteConfigs.InitializeWithUserParameters(new KeyValuePair<string, string>(_inputFieldRemoteUserPropertiesId.text, _inputFieldRemoteUserPropertiesValue.text));
+
+            string values = string.Empty;
+            
+            foreach (var (key, value) in RemoteConfigs.RemoteValues)
+            {
+                values += $"{key}: {value} | {value.Source}\n";
+            }
+
+            _inputFieldsFlags.text = values;
         }
     }
 }
