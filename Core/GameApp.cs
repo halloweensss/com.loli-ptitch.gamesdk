@@ -12,6 +12,7 @@ namespace GameSDK.Core
         private static GameApp _instance;
 
         private GameAppRunner _runner;
+        private bool _isReady = false;
         private InitializationStatus _initializationStatus = InitializationStatus.None;
         private Dictionary<PlatformServiceType, ICoreApp> _services = new Dictionary<PlatformServiceType, ICoreApp>();
         internal static GameApp Instance => _instance ??= new GameApp();
@@ -22,6 +23,7 @@ namespace GameSDK.Core
         public static string Payload => Instance.GetPayload();
         public static bool IsDebugMode { get; set; } = true;
         public static bool IsInitialized => Instance._initializationStatus == InitializationStatus.Initialized;
+        public static bool IsReady => Instance._isReady;
         public static event Action OnInitialized;
         public static event Action OnInitializeError;
         
@@ -141,6 +143,17 @@ namespace GameSDK.Core
         
         public static async Task GameReady()
         {
+            if (IsReady)
+            {
+                if (IsDebugMode)
+                {
+                    Debug.LogWarning(
+                        $"[GameSDK]: SDK has already been ready!");
+                }
+
+                return;
+            }
+            
             if (IsInitialized == false)
             {
                 await Initialize();
@@ -173,6 +186,8 @@ namespace GameSDK.Core
                     return;
                 }
             }
+
+            _instance._isReady = true;
             
             if (IsDebugMode)
             {
