@@ -212,6 +212,8 @@ namespace Test
         public async void Initialize()
         {
             await GameApp.Initialize();
+
+            await GameApp.GameReady();
         }
 
         private void InitializeUI()

@@ -138,5 +138,46 @@ namespace GameSDK.Core
             _instance._initializationStatus = InitializationStatus.Initialized;
             OnInitialized?.Invoke();
         }
+        
+        public static async Task GameReady()
+        {
+            if (IsInitialized == false)
+            {
+                await Initialize();
+            }
+            
+            if (IsInitialized == false)
+            {
+                if (IsDebugMode)
+                {
+                    Debug.LogWarning(
+                        $"[GameSDK]: Before game ready, initialize the sdk\nGameApp.Initialize()!");
+                }
+                
+                return;
+            }
+
+            foreach (var service in _instance._services)
+            {
+                try
+                {
+                    await service.Value.Ready();
+                }
+                catch (Exception e)
+                {
+                    if (IsDebugMode)
+                    {
+                        Debug.LogError($"[GameSDK]: An game ready SDK error has occurred {e.Message}!");
+                    }
+                    
+                    return;
+                }
+            }
+            
+            if (IsDebugMode)
+            {
+                Debug.Log($"[GameSDK]: Game ready!");
+            }
+        }
     }
 }

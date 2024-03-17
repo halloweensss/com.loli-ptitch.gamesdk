@@ -48,6 +48,16 @@ namespace GameSDK.Plugins.YaGames.Core
             await _instance.InitializeInternal();
         }
 
+        public async Task Ready()
+        {
+            if (_status == InitializationStatus.Initialized || _status == InitializationStatus.Waiting)
+            {
+                return;
+            }
+
+            await _instance.GameReadyInternal();
+        }
+
         private async Task InitializeInternal()
         {
 #if !UNITY_EDITOR
@@ -84,6 +94,19 @@ namespace GameSDK.Plugins.YaGames.Core
                 {
                     Debug.Log($"[GameSDK]: An error occurred while initializing the YaGamesApp!");
                 }
+            }
+        }
+        
+        private async Task GameReadyInternal()
+        {
+#if !UNITY_EDITOR
+            YaGamesReady();
+#else
+            await Task.CompletedTask;
+#endif
+            if (GameApp.IsDebugMode)
+            {
+                Debug.Log($"[GameSDK]: YaGamesApp game ready!");
             }
         }
 
@@ -155,6 +178,9 @@ namespace GameSDK.Plugins.YaGames.Core
 
         [DllImport("__Internal")]
         private static extern void YaGamesInitialize(Action onSuccess, Action onError);
+        
+        [DllImport("__Internal")]
+        private static extern void YaGamesReady();
 
         [DllImport("__Internal")]
         private static extern int YaGamesGetDeviceType();

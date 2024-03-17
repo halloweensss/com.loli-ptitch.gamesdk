@@ -21,6 +21,10 @@
                 });
         },
         
+        GameReady: function () {
+            yaGames.SDK.features.LoadingAPI.ready();
+        },
+        
         GetDeviceType: function() {
             const deviceType = yaGames.SDK.deviceInfo.type;
             
@@ -593,6 +597,10 @@
 
     YaGamesInitialize: function (callbackSuccess, callbackError){
         yaGames.Initialize(callbackSuccess, callbackError);
+    },
+    
+    YaGamesReady: function (){
+        yaGames.GameReady();
     },
         
     YaGamesGetDeviceType: function (){

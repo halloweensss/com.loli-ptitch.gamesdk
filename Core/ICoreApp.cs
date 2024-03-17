@@ -9,5 +9,6 @@ namespace GameSDK.Core
         string Lang { get; }
         string Payload { get; }
         Task Initialize();
+        Task Ready();
     }
 }
