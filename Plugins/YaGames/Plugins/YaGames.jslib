@@ -13,7 +13,6 @@
                 .init()
                 .then(ysdk => {
                     yaGames.SDK = ysdk;
-                    yaGames.SDK.features.LoadingAPI.ready();
                     dynCall('v', callbackSuccess, []);
                 })
                 .catch(e => {
