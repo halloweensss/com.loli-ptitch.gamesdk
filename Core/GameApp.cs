@@ -123,6 +123,11 @@ namespace GameSDK.Core
                 try
                 {
                     await service.Value.Initialize();
+                    
+                    if (service.Value.InitializationStatus == InitializationStatus.Initialized) continue;
+                    
+                    _instance._initializationStatus = service.Value.InitializationStatus;
+                    return;
                 }
                 catch (Exception e)
                 {
@@ -175,6 +180,11 @@ namespace GameSDK.Core
                 try
                 {
                     await service.Value.Ready();
+                    
+                    if (service.Value.IsReady) continue;
+                    
+                    _instance._isReady = false;
+                    return;
                 }
                 catch (Exception e)
                 {

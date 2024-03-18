@@ -17,6 +17,7 @@ namespace GameSDK.Plugins.YaGames.Core
         private InitializationStatus _status = InitializationStatus.None;
         private DeviceType _device = DeviceType.Undefined;
         private YaEnvironment _environment = new();
+        private bool _ready;
 
         public PlatformServiceType PlatformService => PlatformServiceType.YaGames;
         public InitializationStatus InitializationStatus => _status;
@@ -37,6 +38,7 @@ namespace GameSDK.Plugins.YaGames.Core
         public string AppId => _environment.app.id;
         public string Lang => _environment.i18n.lang;
         public string Payload => _environment.payload;
+        public bool IsReady => _ready;
 
         public async Task Initialize()
         {
@@ -50,10 +52,8 @@ namespace GameSDK.Plugins.YaGames.Core
 
         public async Task Ready()
         {
-            if (_status == InitializationStatus.Initialized || _status == InitializationStatus.Waiting)
-            {
+            if (_ready)
                 return;
-            }
 
             await _instance.GameReadyInternal();
         }
@@ -100,13 +100,32 @@ namespace GameSDK.Plugins.YaGames.Core
         private async Task GameReadyInternal()
         {
 #if !UNITY_EDITOR
-            YaGamesReady();
+            YaGamesReady(OnSuccess, OnError);
 #else
             await Task.CompletedTask;
+            OnSuccess();
 #endif
-            if (GameApp.IsDebugMode)
+            
+            [MonoPInvokeCallback(typeof(Action))]
+            static void OnSuccess()
             {
-                Debug.Log($"[GameSDK]: YaGamesApp game ready!");
+                _instance._ready = true;
+                
+                if (GameApp.IsDebugMode)
+                {
+                    Debug.Log($"[GameSDK]: YaGamesApp ready!");
+                }
+            }
+
+            [MonoPInvokeCallback(typeof(Action))]
+            static void OnError()
+            {
+                _instance._ready = false;
+                
+                if (GameApp.IsDebugMode)
+                {
+                    Debug.Log($"[GameSDK]: An error occurred while ready the YaGamesApp!");
+                }
             }
         }
 
@@ -180,7 +199,7 @@ namespace GameSDK.Plugins.YaGames.Core
         private static extern void YaGamesInitialize(Action onSuccess, Action onError);
         
         [DllImport("__Internal")]
-        private static extern void YaGamesReady();
+        private static extern void YaGamesReady(Action onSuccess, Action onError);
 
         [DllImport("__Internal")]
         private static extern int YaGamesGetDeviceType();

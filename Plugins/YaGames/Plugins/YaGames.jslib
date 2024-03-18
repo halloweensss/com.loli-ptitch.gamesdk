@@ -20,8 +20,25 @@
                 });
         },
         
-        GameReady: function () {
+        GameReady: function (callbackSuccess, callbackError) {
+            
+            if(yaGames.SDK == undefined) {
+                dynCall('v', callbackError, []);
+                return;
+            }
+            
+            if(yaGames.SDK.features == undefined) {
+                dynCall('v', callbackError, []);
+                return;
+            }
+            
+            if(yaGames.SDK.features.LoadingAPI == undefined) {
+                dynCall('v', callbackError, []);
+                return;
+            }
+            
             yaGames.SDK.features.LoadingAPI.ready();
+            dynCall('v', callbackSuccess, []);
         },
         
         GetDeviceType: function() {
@@ -598,8 +615,8 @@
         yaGames.Initialize(callbackSuccess, callbackError);
     },
     
-    YaGamesReady: function (){
-        yaGames.GameReady();
+    YaGamesReady: function (callbackSuccess, callbackError){
+        yaGames.GameReady(callbackSuccess, callbackError);
     },
         
     YaGamesGetDeviceType: function (){

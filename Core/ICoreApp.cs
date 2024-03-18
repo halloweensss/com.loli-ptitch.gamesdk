@@ -8,6 +8,7 @@ namespace GameSDK.Core
         string AppId { get; }
         string Lang { get; }
         string Payload { get; }
+        bool IsReady { get; }
         Task Initialize();
         Task Ready();
     }

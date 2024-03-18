@@ -212,7 +212,10 @@ namespace Test
         public async void Initialize()
         {
             await GameApp.Initialize();
-
+        }
+        
+        public async void GameReady()
+        {
             await GameApp.GameReady();
         }
 
