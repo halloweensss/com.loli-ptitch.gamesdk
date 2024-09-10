@@ -102,7 +102,7 @@ namespace GameSDK.Localization
             
             _languages.Clear();
             
-            string[] headers = lines[0].Split(',', '\t');
+            string[] headers = lines[0].Split('\t');
 
             Dictionary<string, LocalizedLanguage> languages = new(headers.Length - 1);
 
@@ -113,7 +113,8 @@ namespace GameSDK.Localization
             
             for (int i = 1; i < headers.Length; i++)
             {
-                var languageCode = headers[i].Split("_")[0];
+                var header = headers[i].Trim();
+                var languageCode = header.Split("_")[0];
 
                 if (languagesCode.TryGetValue(languageCode, out var language) == false)
                 {
@@ -142,7 +143,7 @@ namespace GameSDK.Localization
                 string line = lines[i].Trim();
                 if (string.IsNullOrWhiteSpace(line) || line.StartsWith("#")) continue; // Пропускаем комментарии и пустые строки
 
-                string[] values = line.Split(',', '\t');
+                string[] values = line.Split('\t');
 
                 if (values.Length != headers.Length)
                 {
