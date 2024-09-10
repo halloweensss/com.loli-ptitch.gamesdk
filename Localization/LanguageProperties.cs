@@ -1,11 +1,8 @@
-﻿using System;
-using GameSDK.Core.PropertyAttributes;
-
-namespace GameSDK.Localization
+﻿namespace GameSDK.Localization
 {
     public static class LanguageProperties
     {
-        public static Language[] Languages = {
+        public static readonly Language[] Languages = {
             new() { Code = "aa", Name = "Afar", NativeName = "Afaraf" },
             new() { Code = "ab", Name = "Abkhaz", NativeName = "Аҧсуа бызшәа" },
             new() { Code = "ae", Name = "Avestan", NativeName = "Avesta" },
@@ -191,14 +188,5 @@ namespace GameSDK.Localization
             new() { Code = "zh", Name = "Chinese", NativeName = "中文" },
             new() { Code = "zu", Name = "Zulu", NativeName = "IsiZulu" },
         };
-    }
-
-
-    [Serializable]
-    public struct Language
-    {
-	    [ReadOnly] public string Code;
-        [ReadOnly] public string Name;
-        [ReadOnly] public string NativeName;
     }
 }

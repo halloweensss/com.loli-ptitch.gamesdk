@@ -16,19 +16,14 @@ namespace GameSDK.Localization.Editor
                 localizationDatabase.AddLanguage();
             }
 
-            if (GUILayout.Button("Translate All From Default"))
+            if (GUILayout.Button("Load Form Sheet"))
             {
-                localizationDatabase.Translate();
+                localizationDatabase.LoadFormSheet();
             }
-
-            if (GUILayout.Button("Translate Concrete From Default"))
+            
+            if (GUILayout.Button("Clear"))
             {
-                localizationDatabase.TranslateConcrete();
-            }
-
-            if (GUILayout.Button("Change Default Language"))
-            {
-                localizationDatabase.ChangeDefaultLanguage();
+                localizationDatabase.Clear();
             }
         }
     }

@@ -1,9 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using GameSDK.Core.PropertyAttributes;
-using UnityEditor;
 using UnityEngine;
+using UnityEngine.Networking;
+
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace GameSDK.Localization
 {
@@ -11,13 +15,16 @@ namespace GameSDK.Localization
     public class LocalizationDatabase : ScriptableObject
     {
         [SerializeField] private string _id;
-        [SerializeField] private LocalizedLanguage _defaultLanguage;
         [SerializeField] [ArrayElementTitle("Language", "Name")] 
         private List<LocalizedLanguage> _languages;
+        
+#if UNITY_EDITOR
+        [SerializeField] private string _sheetID;
+        [SerializeField] private string _sheetGID;
+#endif
 
         internal string Id => _id;
-        internal LocalizedLanguage DefaultLanguage => _defaultLanguage;
-        internal List<LocalizedLanguage> Languages => _languages;
+        public List<LocalizedLanguage> Languages => _languages;
 
 #if UNITY_EDITOR
         public void AddLanguage()
@@ -25,7 +32,7 @@ namespace GameSDK.Localization
             GenericMenu menu = new();
 
             foreach ( var language in GetAllLanguages() )
-                menu.AddItem( new GUIContent( language.Name ), false, AddLanguage, language );
+                menu.AddItem( new GUIContent( language.Name ), false, AddLanguageInternal, language );
 
             menu.ShowAsContext();
 
@@ -36,7 +43,7 @@ namespace GameSDK.Localization
                     .OrderBy(el => el.Name).ToList();
             }
 
-            void AddLanguage( object languageObject )
+            void AddLanguageInternal( object languageObject )
             {
                 var language = (languageObject is Language o ? o : default);
                 
@@ -55,134 +62,119 @@ namespace GameSDK.Localization
             }
         }
         
-        public async void Translate()
+        public async void LoadFormSheet()
         {
-            var baseLanguage = _defaultLanguage;
+            string newLine = System.Environment.NewLine;
 
-            if (baseLanguage == null)
+            string url = $"https://docs.google.com/spreadsheets/d/{_sheetID}/export?format=tsv&gid={_sheetGID}";
+
+            using UnityWebRequest webRequest = UnityWebRequest.Get( url );
+
+            var asyncOp = webRequest.SendWebRequest();
+            
+            string title = "Downloading";
+            string info = $"Downloading \"{_sheetID}\" sheet";
+                
+            int progressId = Progress.Start( title, info );
+                
+            while ( asyncOp.isDone == false )
             {
-                Debug.LogError( "[LocalizationDatabase]: Wrong default language!" );
+                Progress.Report( progressId, asyncOp.progress );
+                await Task.Yield();
+            }
+                
+            Progress.Remove( progressId );
+            
+            if ( webRequest.result != UnityWebRequest.Result.Success )
+            {
+                Debug.LogError( $"[LocalizationDatabase]: {webRequest.error}" );
+                return;
+            }
+
+            string rawdata = webRequest.downloadHandler.text;
+            string[] lines = rawdata.Split(newLine);
+            
+            if (lines.Length == 0)
+            {
+                Debug.LogError("[LocalizationDatabase]: Sheet is empty!");
                 return;
             }
             
-            foreach (var language in _languages)
+            _languages.Clear();
+            
+            string[] headers = lines[0].Split(',', '\t');
+
+            Dictionary<string, LocalizedLanguage> languages = new(headers.Length - 1);
+
+            Dictionary<string, Language> languagesCode =
+                LanguageProperties.Languages.ToDictionary(el => el.Code, el => el);
+            
+            List<string> languageCodes = new(headers.Length - 1);
+            
+            for (int i = 1; i < headers.Length; i++)
             {
-                foreach (var text in baseLanguage.Text)
+                var languageCode = headers[i].Split("_")[0];
+
+                if (languagesCode.TryGetValue(languageCode, out var language) == false)
                 {
-                    var translateText = await GameSDK.Localization.Translate.Process(baseLanguage.Language.Code,language.Language.Code, text.Value);
-
-                    var textTranslated = language.Text.FirstOrDefault(el => el.Key == text.Key);
-
-                    if (textTranslated == null)
-                    {
-                        textTranslated = new LocalizedText() { Key = text.Key };
-                        language.Text.Add(textTranslated);
-                    }
-
-                    textTranslated.Value = translateText;
+                    Debug.LogError( $"[LocalizationDatabase]: Wrong language: {languageCode}" );
+                    continue;
                 }
+                
+                LocalizedLanguage localizedLanguage = new()
+                {
+                    Language = language,
+                    Text = new(64)
+                };
+                
+                _languages.Add(localizedLanguage);
+                languages.Add(languageCode, localizedLanguage);
+                languageCodes.Add(languageCode);
             }
+            
+            title = "Importing";
+            info = $"Importing \"{_sheetID}\" sheet";
+                
+            progressId = Progress.Start( title, info );
+            
+            for (int i = 1; i < lines.Length; i++)
+            {
+                string line = lines[i].Trim();
+                if (string.IsNullOrWhiteSpace(line) || line.StartsWith("#")) continue; // Пропускаем комментарии и пустые строки
+
+                string[] values = line.Split(',', '\t');
+
+                if (values.Length != headers.Length)
+                {
+                    Debug.LogError("CSV row does not match header length at line " + i);
+                    continue;
+                }
+
+                var key = values[0].ToUpper();
+
+                for (int j = 1; j < values.Length; j++)
+                {
+                    var code = languageCodes[j - 1];
+                    if (languages.TryGetValue(code, out var language) == false)
+                    {
+                        Debug.LogError( $"[LocalizationDatabase]: Wrong language: {code}" );
+                        continue;
+                    }
+                    
+                    language.Text.Add(new LocalizedText { Key = key, Value = values[j] });
+                }
+                
+                Progress.Report( progressId, (1f * i) / (lines.Length - 1) );
+                await Task.Yield();
+            }
+            
+            Progress.Remove( progressId );
         }
         
-        public async void TranslateConcrete()
+        public void Clear()
         {
-            GenericMenu menu = new();
-
-            foreach ( var language in GetAllLanguages() )
-                menu.AddItem( new GUIContent( language.Language.Name ), false, TranslateConcreteLanguage, language );
-
-            menu.ShowAsContext();
-
-            List<LocalizedLanguage> GetAllLanguages()
-            {
-                return _languages;
-            }
-
-            async void TranslateConcreteLanguage( object languageObject )
-            {
-                var language = (languageObject is LocalizedLanguage o ? o : null);
-                
-                if (language == null)
-                {
-                    Debug.LogError( "[LocalizationDatabase]: Wrong language!" );
-                    return;
-                }
-
-                var defaultLanguage = _defaultLanguage;
-
-                foreach (var text in defaultLanguage.Text)
-                {
-                    var translateText = await GameSDK.Localization.Translate.Process(defaultLanguage.Language.Code,language.Language.Code, text.Value);
-
-                    var textTranslated = language.Text.FirstOrDefault(el => el.Key == text.Key);
-
-                    if (textTranslated == null)
-                    {
-                        textTranslated = new LocalizedText() { Key = text.Key };
-                        language.Text.Add(textTranslated);
-                    }
-
-                    textTranslated.Value = translateText;
-                }
-            }
-        }
-        
-        public void ChangeDefaultLanguage()
-        {
-            GenericMenu menu = new();
-
-            foreach ( var language in GetAllLanguages() )
-                menu.AddItem( new GUIContent( language.Language.Name ), false, ChangeLanguage, language );
-
-            menu.ShowAsContext();
-
-            List<LocalizedLanguage> GetAllLanguages()
-            {
-                return _languages;
-            }
-
-            void ChangeLanguage( object languageObject )
-            {
-                var language = (languageObject is LocalizedLanguage o ? o : null);
-                
-                if (language == null)
-                {
-                    Debug.LogError( "[LocalizationDatabase]: Wrong language!" );
-                    return;
-                }
-
-                var defaultLanguage = _defaultLanguage;
-
-                _defaultLanguage = language;
-
-                if (_languages.Contains(language))
-                {
-                    _languages.Remove(language);
-                }
-
-                if (_languages.Exists(el => el.Language.Code == defaultLanguage.Language.Code) == false)
-                {
-                    _languages.Add(defaultLanguage);
-                }
-            }
+            _languages.Clear();
         }
 #endif
-    }
-
-    [System.Serializable]
-    internal class LocalizedLanguage
-    {
-        #if UNITY_EDITOR
-        public string Name => Language.Name;
-        #endif
-        public Language Language;
-        public List<LocalizedText> Text;
-    }
-
-    [System.Serializable]
-    internal class LocalizedText
-    {
-        public string Key;
-        public string Value;
     }
 }

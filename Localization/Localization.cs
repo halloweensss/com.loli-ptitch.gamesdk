@@ -12,11 +12,11 @@ namespace GameSDK.Localization
         private static Localization Instance => _instance ??= new Localization();
 
         private string _currentLanguage;
-        private Dictionary<string, LocalizationDatabase> _databases = new Dictionary<string, LocalizationDatabase>();
-        private Dictionary<string, LocalizationDatabase> _keysDatabase = new Dictionary<string, LocalizationDatabase>();
-        private Dictionary<string, Dictionary<string, string>> _localizations = new Dictionary<string, Dictionary<string,string>>();
-        private Dictionary<string, Language> _languages = new Dictionary<string, Language>();
-        private Dictionary<string, HashSet<TMP_Text>> _tmpTexts = new Dictionary<string, HashSet<TMP_Text>>();
+        private readonly Dictionary<string, LocalizationDatabase> _databases = new(32);
+        private readonly Dictionary<string, LocalizationDatabase> _keysDatabase = new(32);
+        private readonly Dictionary<string, Dictionary<string, string>> _localizations = new(32);
+        private Dictionary<string, Language> _languages = new(32);
+        private readonly Dictionary<string, HashSet<TMP_Text>> _tmpTexts = new(32);
         public static event Action<string> OnLanguageChanged;
         public static event Action<string, string> OnCurrentLanguageKeyAdded;
         
@@ -169,8 +169,6 @@ namespace GameSDK.Localization
                 return;
             }
             
-            AppendLocalization(database, database.DefaultLanguage);
-
             foreach (var language in database.Languages)
             {
                 AppendLocalization(database, language);
@@ -205,11 +203,6 @@ namespace GameSDK.Localization
                     $"[Localization]: Text with key [{key}] is not contains in localizations!");
 #endif
                 return key;
-            }
-
-            if (TryGetValueFromLanguage(key, database.DefaultLanguage.Language.Code, out text))
-            {
-                return text;
             }
             
 #if UNITY_EDITOR
