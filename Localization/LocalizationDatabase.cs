@@ -170,11 +170,17 @@ namespace GameSDK.Localization
             }
             
             Progress.Remove( progressId );
+            
+            EditorUtility.SetDirty(this);
+            AssetDatabase.SaveAssetIfDirty(this);
         }
         
         public void Clear()
         {
             _languages.Clear();
+            
+            EditorUtility.SetDirty(this);
+            AssetDatabase.SaveAssetIfDirty(this);
         }
 #endif
     }
