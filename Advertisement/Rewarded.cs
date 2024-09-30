@@ -35,6 +35,8 @@ namespace GameSDK.Advertisement
                 return;
             }
 
+            await GameApp.GameStop();
+
             foreach (var service in Ads.Services)
             {
                 try
@@ -61,9 +63,11 @@ namespace GameSDK.Advertisement
             OnShowed?.Invoke();
         }
 
-        internal void OnClosedHandler(PlatformServiceType platform)
+        internal async void OnClosedHandler(PlatformServiceType platform)
         {
             OnClosed?.Invoke();
+            
+            await GameApp.GameStart();
         }
 
         internal void OnRewardedHandler(PlatformServiceType platform)
@@ -71,9 +75,11 @@ namespace GameSDK.Advertisement
             OnRewarded?.Invoke();
         }
 
-        internal void OnErrorHandler(PlatformServiceType platform)
+        internal async void OnErrorHandler(PlatformServiceType platform)
         {
             OnError?.Invoke();
+            
+            await GameApp.GameStart();
         }
 
         internal void OnClickedHandler(PlatformServiceType platform)

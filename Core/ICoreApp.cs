@@ -9,7 +9,10 @@ namespace GameSDK.Core
         string Lang { get; }
         string Payload { get; }
         bool IsReady { get; }
+        bool IsStarted { get; }
         Task Initialize();
         Task Ready();
+        Task Start();
+        Task Stop();
     }
 }

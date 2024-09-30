@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using AOT;
@@ -18,6 +17,7 @@ namespace GameSDK.Plugins.YaGames.Core
         private DeviceType _device = DeviceType.Undefined;
         private YaEnvironment _environment = new();
         private bool _ready;
+        private bool _started = false;
 
         public PlatformServiceType PlatformService => PlatformServiceType.YaGames;
         public InitializationStatus InitializationStatus => _status;
@@ -39,6 +39,7 @@ namespace GameSDK.Plugins.YaGames.Core
         public string Lang => _environment.i18n.lang;
         public string Payload => _environment.payload;
         public bool IsReady => _ready;
+        public bool IsStarted => _started;
 
         public async Task Initialize()
         {
@@ -56,6 +57,16 @@ namespace GameSDK.Plugins.YaGames.Core
                 return;
 
             await _instance.GameReadyInternal();
+        }
+
+        public async Task Start()
+        {
+            await _instance.GameStartInternal();
+        }
+
+        public async Task Stop()
+        {
+            await _instance.GameStopInternal();
         }
 
         private async Task InitializeInternal()
@@ -125,6 +136,66 @@ namespace GameSDK.Plugins.YaGames.Core
                 if (GameApp.IsDebugMode)
                 {
                     Debug.Log($"[GameSDK]: An error occurred while ready the YaGamesApp!");
+                }
+            }
+        }
+        
+        private async Task GameStartInternal()
+        {
+#if !UNITY_EDITOR
+            YaGamesStart(OnSuccess, OnError);
+#else
+            await Task.CompletedTask;
+            OnSuccess();
+#endif
+            
+            [MonoPInvokeCallback(typeof(Action))]
+            static void OnSuccess()
+            {
+                _instance._started = true;
+                
+                if (GameApp.IsDebugMode)
+                {
+                    Debug.Log($"[GameSDK]: YaGamesApp started!");
+                }
+            }
+
+            [MonoPInvokeCallback(typeof(Action))]
+            static void OnError()
+            {
+                if (GameApp.IsDebugMode)
+                {
+                    Debug.Log($"[GameSDK]: An error occurred while start the YaGamesApp!");
+                }
+            }
+        }
+        
+        private async Task GameStopInternal()
+        {
+#if !UNITY_EDITOR
+            YaGamesStop(OnSuccess, OnError);
+#else
+            await Task.CompletedTask;
+            OnSuccess();
+#endif
+            
+            [MonoPInvokeCallback(typeof(Action))]
+            static void OnSuccess()
+            {
+                _instance._started = false;
+                
+                if (GameApp.IsDebugMode)
+                {
+                    Debug.Log($"[GameSDK]: YaGamesApp stopped!");
+                }
+            }
+
+            [MonoPInvokeCallback(typeof(Action))]
+            static void OnError()
+            {
+                if (GameApp.IsDebugMode)
+                {
+                    Debug.Log($"[GameSDK]: An error occurred while stop the YaGamesApp!");
                 }
             }
         }
@@ -200,6 +271,12 @@ namespace GameSDK.Plugins.YaGames.Core
         
         [DllImport("__Internal")]
         private static extern void YaGamesReady(Action onSuccess, Action onError);
+        
+        [DllImport("__Internal")]
+        private static extern void YaGamesStart(Action onSuccess, Action onError);
+        
+        [DllImport("__Internal")]
+        private static extern void YaGamesStop(Action onSuccess, Action onError);
 
         [DllImport("__Internal")]
         private static extern int YaGamesGetDeviceType();

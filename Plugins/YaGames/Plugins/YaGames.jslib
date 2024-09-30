@@ -40,6 +40,48 @@
             yaGames.SDK.features.LoadingAPI.ready();
             dynCall('v', callbackSuccess, []);
         },
+
+        GameStart: function (callbackSuccess, callbackError) {
+
+            if(yaGames.SDK == undefined) {
+                dynCall('v', callbackError, []);
+                return;
+            }
+
+            if(yaGames.SDK.features == undefined) {
+                dynCall('v', callbackError, []);
+                return;
+            }
+
+            if(yaGames.SDK.features.GameplayAPI == undefined) {
+                dynCall('v', callbackError, []);
+                return;
+            }
+
+            yaGames.SDK.features.GameplayAPI.start();
+            dynCall('v', callbackSuccess, []);
+        },
+
+        GameStop: function (callbackSuccess, callbackError) {
+
+            if(yaGames.SDK == undefined) {
+                dynCall('v', callbackError, []);
+                return;
+            }
+
+            if(yaGames.SDK.features == undefined) {
+                dynCall('v', callbackError, []);
+                return;
+            }
+
+            if(yaGames.SDK.features.GameplayAPI == undefined) {
+                dynCall('v', callbackError, []);
+                return;
+            }
+
+            yaGames.SDK.features.GameplayAPI.stop();
+            dynCall('v', callbackSuccess, []);
+        },
         
         GetDeviceType: function() {
             const deviceType = yaGames.SDK.deviceInfo.type;
@@ -609,6 +651,13 @@
             stringToUTF8(string, stringBufferPtr, stringBufferSize);
             return stringBufferPtr;
         },
+
+        ServerTime: function(callback) {
+            const serverTime = yaGames.SDK.serverTime();
+            const dataString = yaGames.GetAllocatedString(serverTime.toString());
+            dynCall('vi', callback, [dataString]);
+            _free(dataString);
+        },
     },
 
     YaGamesInitialize: function (callbackSuccess, callbackError){
@@ -617,6 +666,14 @@
     
     YaGamesReady: function (callbackSuccess, callbackError){
         yaGames.GameReady(callbackSuccess, callbackError);
+    },
+
+    YaGamesStart: function (callbackSuccess, callbackError){
+        yaGames.GameStart(callbackSuccess, callbackError);
+    },
+
+    YaGamesStop: function (callbackSuccess, callbackError){
+        yaGames.GameStop(callbackSuccess, callbackError);
     },
         
     YaGamesGetDeviceType: function (){
@@ -722,7 +779,7 @@
     YaPurchasesGetPurchases: function (callbackSuccess, callbackError){
         yaGames.PurchasesGetPurchases(callbackSuccess, callbackError);
     },
-   
+    
     YaPurchasesConsume: function (token, callbackSuccess, callbackError){
         yaGames.PurchasesConsume(token, callbackSuccess, callbackError);
     },
@@ -733,6 +790,10 @@
 
     YaRemoteConfigsInitializeWithClientParameters: function (parameters, callbackSuccess, callbackError){
         yaGames.RemoteConfigsInitializeWithClientParameters(parameters, callbackSuccess, callbackError);
+    },
+
+    YaGamesServerTime: function (callback){
+        yaGames.ServerTime(callback);
     },
 }
 

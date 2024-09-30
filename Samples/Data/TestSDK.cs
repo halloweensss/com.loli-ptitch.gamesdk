@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
+using System.Globalization;
 using GameSDK.Advertisement;
 using GameSDK.Authentication;
 using GameSDK.Core;
@@ -13,6 +13,7 @@ using GameSDK.RemoteConfigs;
 using GameSDK.Shortcut;
 using TMPro;
 using UnityEngine;
+using Time = GameSDK.Time.Time;
 
 namespace Test
 {
@@ -37,6 +38,11 @@ namespace Test
         [SerializeField] private TMP_Text _purchasesCoins;
         [SerializeField] private TMP_Text _purchasesNoAds;
         [SerializeField] private TMP_Text _authStatus;
+        [SerializeField] private TMP_Text _timestamp;
+        [SerializeField] private TMP_Text _localTime;
+        [SerializeField] private TMP_Text _time;
+        [SerializeField] private TMP_Text _visibleStatus;
+        [SerializeField] private TMP_Text _startedText;
 
         [SerializeField] private RectTransform _leaderboardContent;
         [SerializeField] private LeaderboardEntityElement _prefabLeaderboardElement;
@@ -67,6 +73,8 @@ namespace Test
         private void Awake()
         {
             GameApp.OnInitialized += OnGameAppInitialized;
+            GameApp.OnVisibilityChanged += OnVisibilityChanged;
+            GameApp.OnStartChanged += OnStartChanged;
             Auth.OnSignIn += OnSignIn;
             Leaderboard.OnInitialized += OnLeaderboardInitialized;
             Purchases.OnInitialized += OnPurchasesInitialized;
@@ -108,6 +116,14 @@ namespace Test
                 _purchasesInitialized.text = "yes";
             }
         }
+
+        private void OnStartChanged(bool status)
+        {
+            _startedText.text = GameApp.IsStarted.ToString();
+        }
+
+        private void OnVisibilityChanged(bool status) => 
+            _visibleStatus.text = GameApp.IsVisible.ToString();
 
         private void SubscribeInterstitial()
         {
@@ -202,6 +218,7 @@ namespace Test
         private void OnDestroy()
         {
             Auth.OnSignIn -= OnSignIn;
+            GameApp.OnVisibilityChanged -= OnVisibilityChanged;
         }
 
         void OnSignIn(SignInType obj)
@@ -218,6 +235,16 @@ namespace Test
         {
             await GameApp.GameReady();
         }
+        
+        public async void GameStart()
+        {
+            await GameApp.Start();
+        }
+
+        public async void GameStop()
+        {
+            await GameApp.Stop();
+        }
 
         private void InitializeUI()
         {
@@ -225,6 +252,8 @@ namespace Test
             _deviceType.text = GameApp.DeviceType.ToString();
             _lang.text = GameApp.Lang;
             _appId.text = GameApp.AppId;
+            _visibleStatus.text = GameApp.IsVisible.ToString();
+            _startedText.text = GameApp.IsStarted.ToString();
         }
         
         private void InitializeUISignIn()
@@ -515,6 +544,16 @@ namespace Test
             }
 
             _inputFieldsFlags.text = values;
+        }
+
+        public async void GetTime()
+        {
+            var time = await Time.GetTimestamp();
+
+            _timestamp.text = $"Timestamp: {time}";
+            var datetime = DateTimeOffset.FromUnixTimeMilliseconds(time).UtcDateTime;
+            _time.text = $"UTC Time: {datetime.ToString(CultureInfo.InvariantCulture)}";
+            _localTime.text = $"Local Time: {datetime.ToLocalTime().ToString(CultureInfo.InvariantCulture)}";
         }
     }
 }
