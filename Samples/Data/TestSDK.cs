@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using GameSDK.Advertisement;
+using GameSDK.Analytics;
 using GameSDK.Authentication;
 using GameSDK.Core;
 using GameSDK.GameFeedback;
@@ -13,6 +14,7 @@ using GameSDK.RemoteConfigs;
 using GameSDK.Shortcut;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Analytics;
 using Time = GameSDK.Time.Time;
 
 namespace Test
@@ -54,6 +56,9 @@ namespace Test
         [SerializeField] private TMP_InputField _inputFieldValue;
         [SerializeField] private TMP_InputField _leaderboardId;
         [SerializeField] private TMP_InputField _leaderboardScore;
+        
+        [SerializeField] private TMP_InputField _analyticsTest2Key;
+        [SerializeField] private TMP_InputField _analyticsTest2Value;
 
         [SerializeField] private List<LocalizationDatabase> _databasesLocalizations = new List<LocalizationDatabase>();  
         [SerializeField] private List<TMP_InputField> _inputFieldsKeysSave = new List<TMP_InputField>();  
@@ -554,6 +559,22 @@ namespace Test
             var datetime = DateTimeOffset.FromUnixTimeMilliseconds(time).UtcDateTime;
             _time.text = $"UTC Time: {datetime.ToString(CultureInfo.InvariantCulture)}";
             _localTime.text = $"Local Time: {datetime.ToLocalTime().ToString(CultureInfo.InvariantCulture)}";
+        }
+
+        public async void InitializeAnalytics()
+        {
+            await GameSDK.Analytics.Analytics.Initialize();
+            await GameSDK.Analytics.Analytics.SetConsent(new ConsentInfo() { IsConsentGranted = true });
+        }
+        
+        public async void SendAnalyticsTest1()
+        {
+            await GameSDK.Analytics.Analytics.SendEvent("test_event_1");
+        }
+        
+        public async void SendAnalyticsTest2()
+        {
+            await GameSDK.Analytics.Analytics.SendEvent("test_event_2", new Dictionary<string, object> { { _analyticsTest2Key.text, _analyticsTest2Value.text } });
         }
     }
 }

@@ -1,0 +1,16 @@
+{
+    "name": "GameSDK.Plugins.YaMetricaWeb.Editor",
+    "rootNamespace": "",
+    "references": ["GUID:d78900796451133499c2c8289fe92743"],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

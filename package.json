@@ -1,6 +1,6 @@
 {
   "name": "com.cucumber.gamesdk",
-  "version": "0.2.8",
+  "version": "0.3.0",
   "displayName": "Game SDK",
   "description": "Some services for your game",
   "repository": {
@@ -8,7 +8,8 @@
     "url": "git+https://github.com/halloweensss/Services.git"
   },
   "dependencies": {
-    "com.unity.textmeshpro": "3.0.6"
+    "com.unity.textmeshpro": "3.0.6",
+    "com.unity.nuget.newtonsoft-json": "3.0.0"
   },
   "author": {
     "name": "Cucumber",

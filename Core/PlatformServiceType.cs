@@ -3,6 +3,7 @@
     public enum PlatformServiceType
     {
         None,
-        YaGames
+        YaGames,
+        Analytics
     }
 }
