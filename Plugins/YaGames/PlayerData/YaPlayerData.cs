@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
@@ -21,7 +22,24 @@ namespace GameSDK.Plugins.YaGames.PlayerData
         private SignInType _signInType = SignInType.None;
         private string _id = string.Empty;
         private string _name = string.Empty;
+        private PayingStatusType _payingStatus = PayingStatusType.None;
         private Coroutine _coroutineDelayedSave = null;
+        private readonly Dictionary<AvatarSizeType, string> _avatars = new(4);
+
+        private static readonly Dictionary<string, PayingStatusType> _payingStatuses = new()
+        {
+            { "unknown", PayingStatusType.Unknown },
+            { "not_paying", PayingStatusType.Paying },
+            { "partially_paying", PayingStatusType.PartiallyPaying },
+            { "paying", PayingStatusType.Paying }
+        };
+
+        private static readonly Dictionary<AvatarSizeType, string> _avatarSizes = new()
+        {
+            { AvatarSizeType.Small, "small" },
+            { AvatarSizeType.Medium, "medium" },
+            { AvatarSizeType.Large, "large" }
+        };
         
         public PlatformServiceType PlatformService => PlatformServiceType.YaGames;
         public InitializationStatus InitializationStatus => _status;
@@ -63,6 +81,46 @@ namespace GameSDK.Plugins.YaGames.PlayerData
                 
                 return _signInType;
             }
+        }
+
+        public PayingStatusType PayingStatus
+        {
+            get
+            {
+                if (_payingStatus == PayingStatusType.None && _status == InitializationStatus.Initialized)
+                {
+                    InitializePayingStatus();
+                }
+                
+                return _payingStatus;
+            }
+        }
+
+        public async Task<string> GetAvatar(AvatarSizeType size)
+        {
+            if (_status != InitializationStatus.Initialized)
+            {
+                if (GameApp.IsDebugMode)
+                {
+                    Debug.Log($"[GameSDK.Authentication]: YaPlayerData is not initialized!");
+                }
+
+                return string.Empty;
+            }
+
+#if !UNITY_EDITOR
+            if (_avatars.TryGetValue(size, out var avatar))
+                return avatar;
+
+            var avatarUrl = YaGamesGetPhoto(_avatarSizes.GetValueOrDefault(size, "small"));
+
+            if (string.IsNullOrEmpty(avatarUrl) == false)
+                _avatars.TryAdd(size, avatarUrl);
+
+            return avatarUrl;
+#else
+            return "default";
+#endif
         }
 
         public async Task SignIn()
@@ -117,6 +175,7 @@ namespace GameSDK.Plugins.YaGames.PlayerData
                 _instance.InitializeId();
                 _instance.InitializeName();
                 _instance.InitializeMode();
+                _instance.InitializePayingStatus();
                 
                 if (GameApp.IsDebugMode)
                 {
@@ -165,6 +224,7 @@ namespace GameSDK.Plugins.YaGames.PlayerData
                 _instance.InitializeId();
                 _instance.InitializeName();
                 _instance.InitializeMode();
+                _instance.InitializePayingStatus();
                 
                 if (GameApp.IsDebugMode)
                 {
@@ -199,6 +259,26 @@ namespace GameSDK.Plugins.YaGames.PlayerData
             _id = YaGamesGetId();
 #else
             _id = $"Id [{_signInType.ToString()}]";
+#endif
+        }
+
+        private void InitializePayingStatus()
+        {
+            if (_status != InitializationStatus.Initialized)
+            {
+                if (GameApp.IsDebugMode)
+                {
+                    Debug.Log($"[GameSDK.Authentication]: YaPlayerData is not initialized!");
+                }
+
+                return;
+            }
+
+#if !UNITY_EDITOR
+            var payingStatus = YaGamesGetPayingStatus();
+            _payingStatus = _payingStatuses.GetValueOrDefault(payingStatus, PayingStatusType.None);
+#else
+            _payingStatus = PayingStatusType.Unknown;
 #endif
         }
 
@@ -431,6 +511,10 @@ namespace GameSDK.Plugins.YaGames.PlayerData
         
         [DllImport("__Internal")]
         private static extern string YaGamesGetId();
+        [DllImport("__Internal")]
+        private static extern string YaGamesGetPayingStatus();
+        [DllImport("__Internal")]
+        private static extern string YaGamesGetPhoto(string size);
         
         [DllImport("__Internal")]
         private static extern string YaGamesGetName();

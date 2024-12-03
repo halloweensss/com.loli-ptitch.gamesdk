@@ -165,6 +165,16 @@
             return name;
         },
         
+        GetPayingStatus: function() {
+            const status = yaGames.GetAllocatedString(yaGames.Player.getPayingStatus());
+            return status;
+        },
+        
+        GetPhoto: function(size) {
+            const photoSrc = yaGames.GetAllocatedString(yaGames.Player.getPhoto(UTF8ToString(size)));
+            return photoSrc;
+        },
+        
         GetMode: function() {
             const mode = yaGames.Player.getMode();
             switch (mode) {
@@ -698,6 +708,14 @@
     
     YaGamesGetMode: function (){
         return yaGames.GetMode();
+    },
+
+    YaGamesGetPayingStatus: function (){
+        return yaGames.GetPayingStatus();
+    },
+    
+    YaGamesGetPhoto: function (size){
+        return yaGames.GetPhoto(size);
     },
     
     YaGamesSaveData: function(key, value, callbackSuccess, callbackError){

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Threading.Tasks;
 using GameSDK.Advertisement;
 using GameSDK.Analytics;
 using GameSDK.Authentication;
@@ -45,6 +46,7 @@ namespace Test
         [SerializeField] private TMP_Text _time;
         [SerializeField] private TMP_Text _visibleStatus;
         [SerializeField] private TMP_Text _startedText;
+        [SerializeField] private TMP_Text _payingStatus;
 
         [SerializeField] private RectTransform _leaderboardContent;
         [SerializeField] private LeaderboardEntityElement _prefabLeaderboardElement;
@@ -56,6 +58,7 @@ namespace Test
         [SerializeField] private TMP_InputField _inputFieldValue;
         [SerializeField] private TMP_InputField _leaderboardId;
         [SerializeField] private TMP_InputField _leaderboardScore;
+        [SerializeField] private TMP_InputField _avatarUri;
         
         [SerializeField] private TMP_InputField _analyticsTest2Key;
         [SerializeField] private TMP_InputField _analyticsTest2Value;
@@ -251,7 +254,7 @@ namespace Test
             await GameApp.Stop();
         }
 
-        private void InitializeUI()
+        private async Task InitializeUI()
         {
             Debug.Log("[Test]: Initialize UI!");
             _deviceType.text = GameApp.DeviceType.ToString();
@@ -259,14 +262,18 @@ namespace Test
             _appId.text = GameApp.AppId;
             _visibleStatus.text = GameApp.IsVisible.ToString();
             _startedText.text = GameApp.IsStarted.ToString();
+            _payingStatus.text = Auth.PayingStatus.ToString();
+            _avatarUri.text = await Auth.GetAvatar(AvatarSizeType.Small);
         }
         
-        private void InitializeUISignIn()
+        private async Task InitializeUISignIn()
         {
             Debug.Log("[Test]: Initialize Sign In UI!");
             _userId.text = Auth.Id;
             _userName.text = Auth.Name;
             _authStatus.text = Auth.SignInType.ToString();
+            _payingStatus.text = Auth.PayingStatus.ToString();
+            _avatarUri.text = await Auth.GetAvatar(AvatarSizeType.Small);
         }
         
         public async void SignIn()

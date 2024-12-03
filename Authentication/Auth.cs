@@ -20,6 +20,7 @@ namespace GameSDK.Authentication
         public static SignInType SignInType => Instance._signInType;
         public static string Id => Instance.GetId();
         public static string Name => Instance.GetName();
+        public static PayingStatusType PayingStatus => Instance.GetPayingStatus();
         
         public static event Action OnInitialized;
         public static event Action<SignInType> OnSignIn;
@@ -203,6 +204,79 @@ namespace GameSDK.Authentication
             _instance._initializationStatus = InitializationStatus.Initialized;
             OnInitialized?.Invoke();
             OnSignIn?.Invoke(_instance._signInType);
+        }
+
+        public static async Task<string> GetAvatar(AvatarSizeType size)
+        {
+            if (GameApp.IsInitialized == false)
+            {
+                await GameApp.Initialize();
+            }
+            
+            if (GameApp.IsInitialized == false)
+            {
+                if (GameApp.IsDebugMode)
+                {
+                    Debug.LogWarning(
+                        $"[GameSDK.Authentication]: Before logging in, initialize the sdk\nGameApp.Initialize()!");
+                }
+                
+                return string.Empty;
+            }
+            
+            if (_instance._signInType == SignInType.None)
+            {
+                if (GameApp.IsDebugMode)
+                {
+                    Debug.LogWarning($"[GameSDK.Authentication]: You are not logged in!");
+                }
+                
+                return string.Empty;
+            }
+            
+            foreach (var service in _instance._services)
+            {
+                var avatar = await service.Value.GetAvatar(size);
+
+                if (string.IsNullOrEmpty(avatar) == false)
+                    return avatar;
+            }
+            
+            return string.Empty;
+        }
+        
+        public PayingStatusType GetPayingStatus()
+        {
+            if (GameApp.IsInitialized == false)
+            {
+                if (GameApp.IsDebugMode)
+                {
+                    Debug.LogWarning(
+                        $"[GameSDK.Authentication]: Before logging in, initialize the sdk\nGameApp.Initialize()!");
+                }
+                
+                return PayingStatusType.None;
+            }
+            
+            if (_instance._signInType == SignInType.None)
+            {
+                if (GameApp.IsDebugMode)
+                {
+                    Debug.LogWarning($"[GameSDK.Authentication]: You are not logged in!");
+                }
+                
+                return PayingStatusType.None;
+            }
+            
+            foreach (var service in _instance._services)
+            {
+                var payingStatus = service.Value.PayingStatus;
+
+                if (payingStatus != PayingStatusType.None)
+                    return payingStatus;
+            }
+            
+            return PayingStatusType.None;
         }
     }
 }
