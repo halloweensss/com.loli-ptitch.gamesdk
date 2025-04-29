@@ -15,9 +15,10 @@ namespace GameSDK.RemoteConfigs
         private static RemoteConfigs _instance;
         private InitializationStatus _initializationStatus = InitializationStatus.None;
         
-        private Dictionary<PlatformServiceType, IRemoteConfigsApp> _services = new Dictionary<PlatformServiceType, IRemoteConfigsApp>();
+        private readonly Dictionary<PlatformServiceType, IRemoteConfigsApp> _services = new();
+        private readonly Dictionary<string, RemoteConfigValue> _remoteValues = new(16);
         
-        private Dictionary<string, RemoteConfigValue> _remoteValues = new Dictionary<string, RemoteConfigValue>(16);
+        private readonly RemoteConfigInjector _injector;
         
         public static event Action OnInitialized;
         public static event Action OnInitializeError;
@@ -25,6 +26,11 @@ namespace GameSDK.RemoteConfigs
         public static bool IsInitialized => Instance._initializationStatus == InitializationStatus.Initialized;
 
         public static IReadOnlyDictionary<string, RemoteConfigValue> RemoteValues => Instance._remoteValues;
+
+        private RemoteConfigs()
+        {
+            _injector = new RemoteConfigInjector(this);
+        }
         
         internal void Register(IRemoteConfigsApp app)
         {
@@ -140,7 +146,17 @@ namespace GameSDK.RemoteConfigs
 
         public static bool TryGetValue(string key, out RemoteConfigValue value) => _instance.TryGetValueInternal(key, out value);
 
-        private void SetDefaultValueInternal(string key, object value)
+        public static void Register(object target)
+        {
+            _instance._injector.Register(target);
+        }
+        
+        public static void Register(params object[] targets)
+        {
+            _instance._injector.Register(targets);
+        }
+        
+        internal void SetDefaultValueInternal(string key, object value)
         {
             string data;
             switch (value)
@@ -182,48 +198,23 @@ namespace GameSDK.RemoteConfigs
                     Source = ConfigValueSource.DefaultValue
                 });
             }
+            
+            _injector.UpdateValues(key);
         }
 
-        private bool TryGetValueInternal<T>(string key, out T value) where T : unmanaged
+        internal bool TryGetValueInternal<T>(string key, out T value) where T : unmanaged
         {
             value = default;
             
             if (_remoteValues.TryGetValue(key, out var remoteValue) == false)
                 return false;
 
-            var type = typeof(T);
-            
-            if(type == typeof(string))
-            {
-                value = (T)(object)remoteValue.StringValue;
-            }
-            else if (type == typeof(byte[]))
-            {
-                value = (T)remoteValue.ByteArrayValue;
-            }
-            else if (type == typeof(long) || type == typeof(ulong) || type == typeof(int) || type == typeof(uint))
-            {
-                value = (T)(object)remoteValue.LongValue;
-            }
-            else if (type == typeof(float) || type == typeof(double))
-            {
-                value = (T)(object)remoteValue.DoubleValue;
-            }
-            else if (type == typeof(bool))
-            {
-                value = (T)(object)remoteValue.BooleanValue;
-            }
-            else
-            {
-                return false;
-            }
-            
-            return true;
+            return remoteValue.TryGetValue(out value);
         }
         
-        private bool TryGetValueInternal(string key, out RemoteConfigValue value) => _remoteValues.TryGetValue(key, out value) != false;
+        internal bool TryGetValueInternal(string key, out RemoteConfigValue value) => _remoteValues.TryGetValue(key, out value) != false;
 
-        private void InitializeValues(IReadOnlyDictionary<string, RemoteConfigValue> values, ConfigValueSource source)
+        internal void InitializeValues(IReadOnlyDictionary<string, RemoteConfigValue> values, ConfigValueSource source)
         {
             foreach (var (key, data) in values)
             {
@@ -231,7 +222,7 @@ namespace GameSDK.RemoteConfigs
             }
         }
         
-        private void TryAddOrReplace(string key, string value, ConfigValueSource source)
+        internal void TryAddOrReplace(string key, string value, ConfigValueSource source)
         {
             if (_remoteValues.ContainsKey(key))
             {
@@ -245,6 +236,8 @@ namespace GameSDK.RemoteConfigs
                     Source = source
                 });
             }
+            
+            _injector.UpdateValues(key);
         }
     }
 }

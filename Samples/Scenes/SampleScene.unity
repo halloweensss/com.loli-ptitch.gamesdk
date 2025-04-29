@@ -26304,6 +26304,7 @@ MonoBehaviour:
   _inputFieldsFlags: {fileID: 516924315}
   _inputFieldRemoteUserPropertiesId: {fileID: 1840092983}
   _inputFieldRemoteUserPropertiesValue: {fileID: 1908394027}
+  _remoteEntityPrefab: {fileID: 766256294348645180, guid: 8dc77f77145e448faa5aad80cc847bcc, type: 3}
 --- !u!4 &1668204316
 Transform:
   m_ObjectHideFlags: 0

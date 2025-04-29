@@ -72,11 +72,19 @@ namespace Test
         [SerializeField] private TMP_InputField _inputFieldRemoteUserPropertiesId;
         [SerializeField] private TMP_InputField _inputFieldRemoteUserPropertiesValue;
 
+
+        [SerializeField] private RemoteEntityElement _remoteEntityPrefab;
+        
         private List<LeaderboardEntityElement> _leaderboardEntities = new();
         private List<PurchaseEntityElement> _purchasesEntities = new();
 
         private int _coins = 0;
         private bool _noAds = false;
+
+        [RemoteValue("4")] private int _test4 = 1;
+        [RemoteValue("4")] private int test5 { get; } = 1;
+        [RemoteValue("4")] public int test6 { get; private set; } = 1;
+        [RemoteValue("4")] private int test7 { get; set; } = 1;
 
         private void Awake()
         {
@@ -90,7 +98,11 @@ namespace Test
             RemoteConfigs.SetDefaultValue("4", 4);
             RemoteConfigs.SetDefaultValue("5", "5");
             RemoteConfigs.SetDefaultValue("6", true);
-            
+            RemoteConfigs.Register(this);
+            RemoteConfigs.SetDefaultValue("4", 5);
+
+            TestGORemote();
+
             SubscribeInterstitial();
             SubscribeRewarded();
             SubscribeBanner();
@@ -123,6 +135,39 @@ namespace Test
                 Purchases.OnInitialized -= OnPurchasesInitialized;
                 _purchasesInitialized.text = "yes";
             }
+        }
+
+        private async Task TestGORemote()
+        {
+            await CreateRemoteGO();
+            for (var i = 0; i < 60; i++)
+                await Task.Yield();
+
+            GC.Collect();
+            RemoteConfigs.SetDefaultValue("1", 4);
+        }
+
+        private async Task CreateRemoteGO()
+        {
+            var entity = Instantiate(_remoteEntityPrefab, transform);
+            entity.test = new()
+            {
+                Array = new[] { 5, 6, 7, 8, 9 },
+                Count = 10,
+                Name = "Hello",
+                Value = 5.25f
+            };
+            var remoteEntity = new RemoteEntity();
+            RemoteConfigs.Register(entity);
+            RemoteConfigs.Register(remoteEntity);
+            RemoteConfigs.SetDefaultValue("1", 3);
+            RemoteConfigs.SetDefaultValue("test",
+                "{\"Array\":[1,2,3],\"Count\":5,\"Name\":\"Hello, World\",\"Value\":1.5}");
+
+            for (var i = 0; i < 60; i++)
+                await Task.Yield();
+            
+            Destroy(entity.gameObject);
         }
 
         private void OnStartChanged(bool status)

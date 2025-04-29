@@ -8,9 +8,9 @@ namespace GameSDK.RemoteConfigs
 {
     public struct RemoteConfigValue
     {
-        internal static Regex booleanTruePattern = new Regex("^(1|true|t|yes|y|on)$", RegexOptions.IgnoreCase);
-        internal static Regex booleanFalsePattern = new Regex("^(0|false|f|no|n|off|)$", RegexOptions.IgnoreCase);
-
+        private static readonly Regex BooleanTruePattern = new Regex("^(1|true|t|yes|y|on)$", RegexOptions.IgnoreCase);
+        private static readonly Regex BooleanFalsePattern = new Regex("^(0|false|f|no|n|off|)$", RegexOptions.IgnoreCase);
+        
         internal RemoteConfigValue(byte[] data, ConfigValueSource source)
             : this()
         {
@@ -22,33 +22,31 @@ namespace GameSDK.RemoteConfigs
         {
             get
             {
-                string stringValue = this.StringValue;
-                if (booleanTruePattern.IsMatch(stringValue))
+                var stringValue = StringValue;
+                if (BooleanTruePattern.IsMatch(stringValue))
                     return true;
-                if (booleanFalsePattern.IsMatch(stringValue))
+                if (BooleanFalsePattern.IsMatch(stringValue))
                     return false;
-                throw new FormatException(string.Format("RemoteConfigValue '{0}' is not a boolean value", (object) stringValue));
+                throw new FormatException($"RemoteConfigValue '{(object)stringValue}' is not a boolean value");
             }
         }
 
         public IEnumerable<byte> ByteArrayValue => (IEnumerable<byte>) this.Data;
 
-        public double DoubleValue
-        {
-            get => Convert.ToDouble(this.StringValue, (IFormatProvider) CultureInfo.InvariantCulture);
-        }
+        public double DoubleValue => Convert.ToDouble(this.StringValue, (IFormatProvider) CultureInfo.InvariantCulture);
 
-        public long LongValue
-        {
-            get => Convert.ToInt64(this.StringValue, (IFormatProvider) CultureInfo.InvariantCulture);
-        }
+        public long LongValue => Convert.ToInt64(this.StringValue, (IFormatProvider) CultureInfo.InvariantCulture);
 
         public string StringValue => Encoding.UTF8.GetString(this.Data);
 
         internal byte[] Data { get; set; }
 
-        public ConfigValueSource Source { get; internal set; }   
+        public ConfigValueSource Source { get; internal set; }
         
+        public bool TryGetValue<T>(out T value) => RemoteConfigTypeConverter.TryConvertToType(ref this, out value);
+
+        public bool TryGetValue(Type type, out object value) => RemoteConfigTypeConverter.TryConvertToType(type, ref this, out value);
+
         public override string ToString()
         {
             return this.StringValue;
