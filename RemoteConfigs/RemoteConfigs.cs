@@ -13,67 +13,60 @@ namespace GameSDK.RemoteConfigs
     public class RemoteConfigs
     {
         private static RemoteConfigs _instance;
-        private InitializationStatus _initializationStatus = InitializationStatus.None;
-        
-        private readonly Dictionary<PlatformServiceType, IRemoteConfigsApp> _services = new();
-        private readonly Dictionary<string, RemoteConfigValue> _remoteValues = new(16);
-        
-        private readonly RemoteConfigInjector _injector;
-        
-        public static event Action OnInitialized;
-        public static event Action OnInitializeError;
-        public static RemoteConfigs Instance => _instance ??= new RemoteConfigs();
-        public static bool IsInitialized => Instance._initializationStatus == InitializationStatus.Initialized;
 
-        public static IReadOnlyDictionary<string, RemoteConfigValue> RemoteValues => Instance._remoteValues;
+        private readonly RemoteConfigInjector _injector;
+        private readonly Dictionary<string, RemoteConfigValue> _remoteValues = new(16);
+
+        private readonly Dictionary<PlatformServiceType, IRemoteConfigsApp> _services = new();
+        private InitializationStatus _initializationStatus = InitializationStatus.None;
 
         private RemoteConfigs()
         {
             _injector = new RemoteConfigInjector(this);
         }
-        
+
+        public static RemoteConfigs Instance => _instance ??= new RemoteConfigs();
+        public static bool IsInitialized => Instance._initializationStatus == InitializationStatus.Initialized;
+
+        public static IReadOnlyDictionary<string, RemoteConfigValue> RemoteValues => Instance._remoteValues;
+
+        public static event Action OnInitialized;
+        public static event Action OnInitializeError;
+
         internal void Register(IRemoteConfigsApp app)
         {
-            if (_services.ContainsKey(app.PlatformService)) 
+            if (_services.TryAdd(app.PlatformService, app) == false)
             {
                 if (GameApp.IsDebugMode)
-                {
-                    Debug.LogWarning($"[GameSDK.RemoteConfigs]: The platform {app.PlatformService} has already been registered!");
-                }
+                    Debug.LogWarning(
+                        $"[GameSDK.RemoteConfigs]: The platform {app.PlatformService} has already been registered!");
 
                 return;
             }
 
-            _services.Add(app.PlatformService, app);
-
             if (GameApp.IsDebugMode)
-            {
                 Debug.Log($"[GameSDK.RemoteConfigs]: Platform {app.PlatformService} is registered!");
-            }
         }
-        
+
         public static async Task Initialize()
         {
             if (GameApp.IsInitialized == false)
-            {
                 await GameApp.Initialize();
-            }
-            
+
             if (GameApp.IsInitialized == false)
             {
                 if (GameApp.IsDebugMode)
-                {
                     Debug.LogWarning(
-                        $"[GameSDK.RemoteConfigs]: Before initialize remote configs, initialize the sdk\nGameApp.Initialize()!");
-                }
-                
+                        "[GameSDK.RemoteConfigs]: Before initialize remote configs, initialize the sdk\nGameApp.Initialize()!");
+
                 return;
             }
-            
+
             _instance._initializationStatus = InitializationStatus.Waiting;
+            
+            await _instance.InitializeDefaultConfigs();
 
             foreach (var service in _instance._services)
-            {
                 try
                 {
                     await service.Value.Initialize();
@@ -82,42 +75,36 @@ namespace GameSDK.RemoteConfigs
                 catch (Exception e)
                 {
                     if (GameApp.IsDebugMode)
-                    {
                         Debug.LogError($"[GameSDK.RemoteConfigs]: An initialize SDK error has occurred {e.Message}!");
-                    }
-                    
+
                     _instance._initializationStatus = InitializationStatus.Error;
                     OnInitializeError?.Invoke();
                     return;
                 }
-            }
 
             _instance._initializationStatus = InitializationStatus.Initialized;
             OnInitialized?.Invoke();
         }
-        
+
         public static async Task InitializeWithUserParameters(params KeyValuePair<string, string>[] parameters)
         {
             if (GameApp.IsInitialized == false)
-            {
                 await GameApp.Initialize();
-            }
-            
+
             if (GameApp.IsInitialized == false)
             {
                 if (GameApp.IsDebugMode)
-                {
                     Debug.LogWarning(
-                        $"[GameSDK.RemoteConfigs]: Before initialize remote configs, initialize the sdk\nGameApp.Initialize()!");
-                }
-                
+                        "[GameSDK.RemoteConfigs]: Before initialize remote configs, initialize the sdk\nGameApp.Initialize()!");
+
                 return;
             }
-            
+
             _instance._initializationStatus = InitializationStatus.Waiting;
 
+            await _instance.InitializeDefaultConfigs();
+
             foreach (var service in _instance._services)
-            {
                 try
                 {
                     await service.Value.InitializeWithUserParameters(parameters);
@@ -126,37 +113,60 @@ namespace GameSDK.RemoteConfigs
                 catch (Exception e)
                 {
                     if (GameApp.IsDebugMode)
-                    {
                         Debug.LogError($"[GameSDK.RemoteConfigs]: An initialize SDK error has occurred {e.Message}!");
-                    }
-                    
+
                     _instance._initializationStatus = InitializationStatus.Error;
                     OnInitializeError?.Invoke();
                     return;
                 }
-            }
 
             _instance._initializationStatus = InitializationStatus.Initialized;
             OnInitialized?.Invoke();
         }
-        
-        public static void SetDefaultValue(string key, object value) => _instance.SetDefaultValueInternal(key, value);
 
-        public static bool TryGetValue<T>(string key, out T value) where T : unmanaged => _instance.TryGetValueInternal(key, out value);
+        public static void SetDefaultValue(string key, object value, bool updateRegisteredObjects = false)
+        {
+            _instance.SetDefaultValueInternal(key, value);
 
-        public static bool TryGetValue(string key, out RemoteConfigValue value) => _instance.TryGetValueInternal(key, out value);
+            if (updateRegisteredObjects)
+                _instance._injector.UpdateValues(key);
+        }
+
+        public static bool TryGetValue<T>(string key, out T value) where T : unmanaged
+        {
+            return _instance.TryGetValueInternal(key, out value);
+        }
+
+        public static bool TryGetValue(string key, out RemoteConfigValue value)
+        {
+            return _instance.TryGetValueInternal(key, out value);
+        }
 
         public static void Register(object target)
         {
             _instance._injector.Register(target);
         }
-        
+
         public static void Register(params object[] targets)
         {
             _instance._injector.Register(targets);
         }
-        
-        internal void SetDefaultValueInternal(string key, object value)
+
+        private async Task InitializeDefaultConfigs()
+        {
+            var configs = Resources.LoadAll<DefaultRemoteValuesConfig>(string.Empty);
+            await Task.Yield();
+
+            foreach (var config in configs)
+            {
+                foreach (var value in config.DefaultValues)
+                    SetDefaultValue(value.Key, value.Value);
+                
+                await Task.Yield();
+            }
+        }
+
+        private void SetDefaultValueInternal(string key, object value)
         {
             string data;
             switch (value)
@@ -166,14 +176,14 @@ namespace GameSDK.RemoteConfigs
                     break;
                 case IEnumerable<byte> bytes:
                 {
-                    List<byte> byteList = new List<byte>(bytes);
+                    var byteList = new List<byte>(bytes);
                     data = Encoding.UTF8.GetString(byteList.ToArray());
                     break;
                 }
                 case IEnumerable enumerable:
                 {
-                    StringBuilder stringBuilder = new StringBuilder();
-                    foreach (object obj in enumerable)
+                    var stringBuilder = new StringBuilder();
+                    foreach (var obj in enumerable)
                         stringBuilder.Append(Convert.ToString(obj, CultureInfo.InvariantCulture));
                     data = stringBuilder.ToString();
                     break;
@@ -185,58 +195,55 @@ namespace GameSDK.RemoteConfigs
 
             if (data == null)
                 return;
-            
-            if (_remoteValues.TryGetValue(key, out var remoteValue) && remoteValue.Source == ConfigValueSource.DefaultValue)
+
+            if (_remoteValues.TryGetValue(key, out var remoteValue))
             {
-                _remoteValues[key] = new RemoteConfigValue(Encoding.UTF8.GetBytes(data), ConfigValueSource.DefaultValue);
+                if (remoteValue.Source == ConfigValueSource.DefaultValue)
+                {
+                    _remoteValues[key] =
+                        new RemoteConfigValue(Encoding.UTF8.GetBytes(data), ConfigValueSource.DefaultValue);
+                }
             }
             else
-            {
                 _remoteValues.Add(key, new RemoteConfigValue
                 {
                     Data = Encoding.UTF8.GetBytes(data),
                     Source = ConfigValueSource.DefaultValue
                 });
-            }
-            
-            _injector.UpdateValues(key);
         }
 
-        internal bool TryGetValueInternal<T>(string key, out T value) where T : unmanaged
+        private bool TryGetValueInternal<T>(string key, out T value) where T : unmanaged
         {
             value = default;
-            
+
             if (_remoteValues.TryGetValue(key, out var remoteValue) == false)
                 return false;
 
             return remoteValue.TryGetValue(out value);
         }
-        
-        internal bool TryGetValueInternal(string key, out RemoteConfigValue value) => _remoteValues.TryGetValue(key, out value) != false;
 
-        internal void InitializeValues(IReadOnlyDictionary<string, RemoteConfigValue> values, ConfigValueSource source)
+        internal bool TryGetValueInternal(string key, out RemoteConfigValue value)
+        {
+            return _remoteValues.TryGetValue(key, out value);
+        }
+
+        private void InitializeValues(IReadOnlyDictionary<string, RemoteConfigValue> values, ConfigValueSource source)
         {
             foreach (var (key, data) in values)
-            {
                 TryAddOrReplace(key, data.StringValue, source);
-            }
         }
-        
-        internal void TryAddOrReplace(string key, string value, ConfigValueSource source)
+
+        private void TryAddOrReplace(string key, string value, ConfigValueSource source)
         {
             if (_remoteValues.ContainsKey(key))
-            {
                 _remoteValues[key] = new RemoteConfigValue(Encoding.UTF8.GetBytes(value), source);
-            }
             else
-            {
                 _remoteValues.Add(key, new RemoteConfigValue
                 {
                     Data = Encoding.UTF8.GetBytes(value),
                     Source = source
                 });
-            }
-            
+
             _injector.UpdateValues(key);
         }
     }

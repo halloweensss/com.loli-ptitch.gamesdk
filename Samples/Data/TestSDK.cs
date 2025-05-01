@@ -95,14 +95,6 @@ namespace Test
             Leaderboard.OnInitialized += OnLeaderboardInitialized;
             Purchases.OnInitialized += OnPurchasesInitialized;
             
-            RemoteConfigs.SetDefaultValue("4", 4);
-            RemoteConfigs.SetDefaultValue("5", "5");
-            RemoteConfigs.SetDefaultValue("6", true);
-            RemoteConfigs.Register(this);
-            RemoteConfigs.SetDefaultValue("4", 5);
-
-            TestGORemote();
-
             SubscribeInterstitial();
             SubscribeRewarded();
             SubscribeBanner();
@@ -582,6 +574,15 @@ namespace Test
             {
                 values += $"{key}: {value} | {value.Source}\n";
             }
+            
+            
+            RemoteConfigs.SetDefaultValue("4", 4);
+            RemoteConfigs.SetDefaultValue("5", "5");
+            RemoteConfigs.SetDefaultValue("6", true);
+            RemoteConfigs.Register(this);
+            RemoteConfigs.SetDefaultValue("4", 5);
+
+            TestGORemote();
 
             _inputFieldsFlags.text = values;
         }
