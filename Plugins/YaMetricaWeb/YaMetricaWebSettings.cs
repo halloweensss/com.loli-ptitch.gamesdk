@@ -7,11 +7,13 @@ namespace GameSDK.Plugins.YaMetricaWeb
     {
         [SerializeField] private bool _isEnable = true;
         [SerializeField] private bool _debugMode = true;
+        [SerializeField] private bool _enableErrorTracking = false;
         [SerializeField] private string _counterId;
         [SerializeField] private bool _sendPageOpenInInitialize;
         [SerializeField] private MetricaParameters _parameters;
 
         public bool IsEnable => _isEnable;
+        public bool EnabledErrorTracking => _enableErrorTracking;
         public string CounterId => _counterId;
         public bool SendPageOpenInInitialize => _sendPageOpenInInitialize;
 

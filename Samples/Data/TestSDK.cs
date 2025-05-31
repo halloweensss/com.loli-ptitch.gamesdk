@@ -629,5 +629,10 @@ namespace Test
         {
             await GameSDK.Analytics.Analytics.SendEvent("test_event_2", new Dictionary<string, object> { { _analyticsTest2Key.text, _analyticsTest2Value.text } });
         }
+
+        public void CreateError()
+        {
+            throw new Exception("Test Error");
+        }
     }
 }

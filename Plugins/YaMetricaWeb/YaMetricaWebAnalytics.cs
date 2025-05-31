@@ -19,10 +19,17 @@ namespace GameSDK.Plugins.YaMetricaWeb
         private ConsentInfo _consentInfo;
         private YaMetricaWebSettings _mainSettings;
         private YaMetricaWebSettings[] _settings;
+
+        private YaMetricaErrorTracker _errorTracker;
         public PlatformServiceType PlatformService => PlatformServiceType.Analytics;
         public InitializationStatus InitializationStatus { get; private set; }
         public AnalyticsProviderType ProviderType => AnalyticsProviderType.YaGamesWeb;
 
+        private YaMetricaWebAnalytics()
+        {
+            _errorTracker = new YaMetricaErrorTracker(this);
+        }
+        
         public async Task Initialize()
         {
             if (InitializationStatus == InitializationStatus.Initialized ||
@@ -122,6 +129,9 @@ namespace GameSDK.Plugins.YaMetricaWeb
             Callback();
             await Task.CompletedTask;
 #endif
+
+            if (_mainSettings.EnabledErrorTracking)
+                _errorTracker.Initialize();
             
             [MonoPInvokeCallback(typeof(Action))]
             static void Callback()
