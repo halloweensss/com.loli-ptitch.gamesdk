@@ -3,7 +3,6 @@
     $yaGames: {
         SDK: undefined,
         Player: undefined,
-        Leaderboard: undefined,
         Purchases: undefined,
         IsInitialized: false,
         SaveDataObject: {},
@@ -121,7 +120,7 @@
 
                     await yaGames.LoadAllData();
                     
-                    if(player.getMode() === 'lite' && signed){
+                    if(player.isAuthorized() === false && signed){
                         console.error("Player is not login to yandex!");
                         yaGames.SDK.auth.openAuthDialog().then(() => {
                             yaGames.InitPlayer(signed)
@@ -174,17 +173,10 @@
             const photoSrc = yaGames.GetAllocatedString(yaGames.Player.getPhoto(UTF8ToString(size)));
             return photoSrc;
         },
-        
+
         GetMode: function() {
-            const mode = yaGames.Player.getMode();
-            switch (mode) {
-                case 'lite':
-                    return 0;
-                case '':
-                    return 1;
-                default:
-                    return 1;
-            }
+            const isAuthorized = yaGames.Player.isAuthorized();
+            return isAuthorized ? 1 : 0;
         },
 
         SaveData: function (key, value, callbackSuccess, callbackError) {
@@ -381,20 +373,9 @@
             });
         },
 
-        LeaderboardInitialize: function(callbackOnSuccess, callbackOnError) {
-            yaGames.SDK.getLeaderboards()
-                .then(lb => {
-                    yaGames.Leaderboard = lb;
-                    dynCall('v', callbackOnSuccess, []);
-                })
-                .catch(e => {
-                    dynCall('v', callbackOnError, []);
-                });
-        },
-
         LeaderboardGetDescription: function(id, callbackOnSuccess, callbackOnError) {
             const idStr = UTF8ToString(id);
-            yaGames.Leaderboard.getLeaderboardDescription(idStr)
+            yaGames.SDK.leaderboards.getDescription(idStr)
                 .then(res => {
                     const dataString = yaGames.GetAllocatedString(JSON.stringify(res));
                     dynCall('vi', callbackOnSuccess, [dataString]);
@@ -407,14 +388,14 @@
 
         LeaderboardSetScore: function(id, score, callbackSuccess, callbackError) {
             const idStr = UTF8ToString(id);
-            yaGames.SDK.isAvailableMethod('leaderboards.setLeaderboardScore')
+            yaGames.SDK.isAvailableMethod('leaderboards.setScore')
                 .then(isAvailable => {
                     if (isAvailable == false) {
                         dynCall('v', callbackError, []);
                         return;
                     }
 
-                    yaGames.Leaderboard.setLeaderboardScore(idStr, score)
+                    yaGames.SDK.leaderboards.setScore(idStr, score)
                         .then(() => {
                             dynCall('v', callbackSuccess, []);
                             return;
@@ -433,14 +414,14 @@
         LeaderboardGetPlayerData: function(id, callbackOnSuccess, callbackOnError) {
             const idStr = UTF8ToString(id);
 
-            yaGames.SDK.isAvailableMethod('leaderboards.getLeaderboardPlayerEntry')
+            yaGames.SDK.isAvailableMethod('leaderboards.getPlayerEntry')
                 .then(isAvailable => {
                     if (isAvailable == false) {
                         dynCall('v', callbackOnError, []);
                         return;
                     }
 
-                    yaGames.Leaderboard.getLeaderboardPlayerEntry(idStr)
+                    yaGames.SDK.leaderboards.getPlayerEntry(idStr)
                         .then(res => {
                             const dataString = yaGames.GetAllocatedString(JSON.stringify(res));
                             dynCall('vi', callbackOnSuccess, [dataString]);
@@ -462,14 +443,14 @@
         LeaderboardGetEntries: function(id, includeUser, quantityAround, quantityTop, callbackSuccess, callbackError) {
             const idStr = UTF8ToString(id);
 
-            yaGames.SDK.isAvailableMethod('leaderboards.getLeaderboardEntries')
+            yaGames.SDK.isAvailableMethod('leaderboards.getEntries')
                 .then(isAvailable => {
                     if (isAvailable == false) {
                         dynCall('v', callbackError, []);
                         return;
                     }
 
-                    yaGames.Leaderboard.getLeaderboardEntries(idStr, {includeUser: includeUser, quantityTop: quantityTop, quantityAround: quantityAround})
+                    yaGames.SDK.leaderboards.getEntries(idStr, {includeUser: includeUser, quantityTop: quantityTop, quantityAround: quantityAround})
                         .then(res => {
                             const dataString = yaGames.GetAllocatedString(JSON.stringify(res));
                             dynCall('vi', callbackSuccess, [dataString]);
@@ -760,10 +741,6 @@
     
     YaGamesCanCreateShortcut: function(callbackOnSuccess, callbackOnError){
         yaGames.CanCreateShortcut(callbackOnSuccess, callbackOnError);
-    },
-
-    YaLeaderboardInitialize: function (callbackSuccess, callbackError){
-        yaGames.LeaderboardInitialize(callbackSuccess, callbackError);
     },
     
     YaLeaderboardGetDescription: function (id, callbackSuccess, callbackError){

@@ -23,11 +23,7 @@ namespace GameSDK.Plugins.YaGames.Leaderboard
         public async Task Initialize()
         {
 #if !UNITY_EDITOR
-            YaLeaderboardInitialize(OnSuccess, OnError);
-            _status = InitializationStatus.Waiting;
-            
-            while (_status == InitializationStatus.Waiting)
-                await Task.Yield();
+            OnSuccess();
 #else
             _status = InitializationStatus.Waiting;
             OnSuccess();
@@ -323,8 +319,6 @@ namespace GameSDK.Plugins.YaGames.Leaderboard
             GameSDK.Leaderboard.Leaderboard.Instance.Register(_instance);
         }
 
-        [DllImport("__Internal")]
-        private static extern void YaLeaderboardInitialize(Action onSuccess, Action onError);
         [DllImport("__Internal")]
         private static extern void YaLeaderboardGetDescription(string id, Action<string> onSuccess, Action onError);
         [DllImport("__Internal")]
