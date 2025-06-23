@@ -1,0 +1,17 @@
+{
+    "name": "GameSDK.YaGames.Leaderboard",
+    "rootNamespace": "GameSDK",
+    "references": [
+        "GameSDK.Leaderboard",
+        "GameSDK.Core"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

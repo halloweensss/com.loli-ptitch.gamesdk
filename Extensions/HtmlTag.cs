@@ -1,4 +1,4 @@
-namespace Extensions
+namespace GameSDK.Extensions
 {
     public enum HtmlTag
     {

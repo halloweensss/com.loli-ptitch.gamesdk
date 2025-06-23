@@ -1,0 +1,17 @@
+{
+    "name": "GameSDK.YaGames.Shortcut",
+    "rootNamespace": "GameSDK",
+    "references": [
+        "GameSDK.Core",
+        "GameSDK.Shortcut"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

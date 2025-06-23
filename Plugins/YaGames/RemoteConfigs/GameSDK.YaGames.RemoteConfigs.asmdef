@@ -1,0 +1,17 @@
+{
+    "name": "GameSDK.YaGames.RemoteConfigs",
+    "rootNamespace": "GameSDK",
+    "references": [
+        "GameSDK.Core",
+        "GameSDK.RemoteConfigs"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

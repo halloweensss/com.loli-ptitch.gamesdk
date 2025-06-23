@@ -8,54 +8,48 @@ namespace GameSDK.Shortcut
 {
     public class Shortcut
     {
-        private static Shortcut _instance;
+        private static readonly Shortcut Instance = new();
 
-        private Dictionary<PlatformServiceType, IShortcutApp> _services = new Dictionary<PlatformServiceType, IShortcutApp>();
-        internal static Shortcut Instance => _instance ??= new Shortcut();
+        private readonly Dictionary<PlatformServiceType, IShortcutApp> _services = new();
 
-        internal void Register(IShortcutApp app)
+        public static void Register(IShortcutApp app)
         {
-            if (_services.ContainsKey(app.PlatformService))
+            Instance.RegisterInternal(app);
+        }
+
+        private void RegisterInternal(IShortcutApp app)
+        {
+            if (_services.TryAdd(app.PlatformService, app) == false)
             {
                 if (GameApp.IsDebugMode)
-                {
-                    Debug.LogWarning($"[GameSDK.Shortcut]: The platform {app.PlatformService} has already been registered!");
-                }
+                    Debug.LogWarning(
+                        $"[GameSDK.Shortcut]: The platform {app.PlatformService} has already been registered!");
 
                 return;
             }
 
-            _services.Add(app.PlatformService, app);
-
             if (GameApp.IsDebugMode)
-            {
                 Debug.Log($"[GameSDK.Shortcut]: Platform {app.PlatformService} is registered!");
-            }
         }
 
         public static async Task<bool> Create()
         {
             if (GameApp.IsInitialized == false)
-            {
                 await GameApp.Initialize();
-            }
-            
+
             if (GameApp.IsInitialized == false)
             {
                 if (GameApp.IsDebugMode)
-                {
                     Debug.LogWarning(
-                        $"[GameSDK.Shortcut]: Before create shortcut, initialize the sdk\nGameApp.Initialize()!");
-                }
-                
+                        "[GameSDK.Shortcut]: Before create shortcut, initialize the sdk\nGameApp.Initialize()!");
+
                 return false;
             }
-            
 
-            List<bool> created = new List<bool>();
 
-            foreach (var service in _instance._services)
-            {
+            var created = new List<bool>();
+
+            foreach (var service in Instance._services)
                 try
                 {
                     created.Add(await service.Value.Create());
@@ -63,53 +57,40 @@ namespace GameSDK.Shortcut
                 catch (Exception e)
                 {
                     if (GameApp.IsDebugMode)
-                    {
-                        Debug.LogError($"[GameSDK.Shortcut]: An error occurred while creating the shortcut {e.Message}!");
-                    }
-                    
+                        Debug.LogError(
+                            $"[GameSDK.Shortcut]: An error occurred while creating the shortcut {e.Message}!");
+
                     return false;
                 }
-            }
 
             if (created.Count == 0)
-            {
                 return false;
-            }
-            
+
             foreach (var shortcutCreated in created)
-            {
                 if (shortcutCreated)
-                {
                     return true;
-                }
-            }
 
             return false;
         }
-        
+
         public static async Task<bool> CanCreate()
         {
             if (GameApp.IsInitialized == false)
-            {
                 await GameApp.Initialize();
-            }
-            
+
             if (GameApp.IsInitialized == false)
             {
                 if (GameApp.IsDebugMode)
-                {
                     Debug.LogWarning(
-                        $"[GameSDK.Shortcut]: Before check create shortcut, initialize the sdk\nGameApp.Initialize()!");
-                }
-                
+                        "[GameSDK.Shortcut]: Before check create shortcut, initialize the sdk\nGameApp.Initialize()!");
+
                 return false;
             }
-            
 
-            List<bool> created = new List<bool>();
 
-            foreach (var service in _instance._services)
-            {
+            var created = new List<bool>();
+
+            foreach (var service in Instance._services)
                 try
                 {
                     created.Add(await service.Value.CanCreate());
@@ -117,26 +98,18 @@ namespace GameSDK.Shortcut
                 catch (Exception e)
                 {
                     if (GameApp.IsDebugMode)
-                    {
-                        Debug.LogError($"[GameSDK.Shortcut]: An error occurred while check creating the shortcut {e.Message}!");
-                    }
-                    
+                        Debug.LogError(
+                            $"[GameSDK.Shortcut]: An error occurred while check creating the shortcut {e.Message}!");
+
                     return false;
                 }
-            }
 
             if (created.Count == 0)
-            {
                 return false;
-            }
-            
+
             foreach (var shortcutCreated in created)
-            {
                 if (shortcutCreated)
-                {
                     return true;
-                }
-            }
 
             return false;
         }

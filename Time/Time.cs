@@ -8,12 +8,13 @@ namespace GameSDK.Time
 {
     public class Time
     {
-        private static Time _instance;
+        private static readonly Time Instance = new();
 
         private readonly Dictionary<PlatformServiceType, ITimeApp> _services = new(2);
-        internal static Time Instance => _instance ??= new Time();
         
-        internal void Register(ITimeApp app)
+        public static void Register(ITimeApp app) => Instance.RegisterInternal(app);
+
+        private void RegisterInternal(ITimeApp app)
         {
             if (_services.TryAdd(app.PlatformService, app) == false)
             {
@@ -46,12 +47,12 @@ namespace GameSDK.Time
                         $"[GameSDK.Time]: Before request time, initialize the sdk\nGameApp.Initialize()!");
                 }
                 
-                return default;
+                return 0;
             }
             
             long timestamp = 0;
             
-            foreach (var service in _instance._services)
+            foreach (var service in Instance._services)
             {
                 try
                 {
@@ -67,7 +68,7 @@ namespace GameSDK.Time
                         Debug.LogError($"[GameSDK.Time]: An get time error has occurred {e.Message}!");
                     }
                     
-                    return default;
+                    return 0;
                 }
             }
 
@@ -78,7 +79,7 @@ namespace GameSDK.Time
                     Debug.LogWarning("[GameSDK.Time]: Get time failed!");
                 }
                 
-                return default;
+                return 0;
             }
 
             return timestamp;

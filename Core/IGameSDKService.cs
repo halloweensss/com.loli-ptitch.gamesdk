@@ -2,7 +2,7 @@
 
 namespace GameSDK.Core
 {
-    internal interface IGameSDKService
+    public interface IGameSDKService
     {
         PlatformServiceType PlatformService { get; }
         InitializationStatus InitializationStatus { get; }

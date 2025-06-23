@@ -9,16 +9,16 @@ using UnityEngine;
 
 namespace GameSDK.Plugins.YaGames.Advertisement
 {
-    public class YaAds : IAdsApp
+    public class YaAds : IAdsApp, IInterstitialAds, IRewardedAds, IBannerAds
     {
-        private static readonly YaAds _instance = new YaAds();
-        
-        private InitializationStatus _status = InitializationStatus.None;
+        private static readonly YaAds Instance = new();
+
         public PlatformServiceType PlatformService => PlatformServiceType.YaGames;
-        public InitializationStatus InitializationStatus => _status;
+        public InitializationStatus InitializationStatus { get; private set; } = InitializationStatus.None;
+
         public Task Initialize()
         {
-            _status = InitializationStatus.Initialized;
+            InitializationStatus = InitializationStatus.Initialized;
             return Task.CompletedTask;
         }
 
@@ -31,61 +31,53 @@ namespace GameSDK.Plugins.YaGames.Advertisement
             OnClose(true);
 #endif
             return Task.CompletedTask;
-            
+
             [MonoPInvokeCallback(typeof(Action))]
             static void OnOpen()
             {
-                Ads.Interstitial.OnShowedHandler(_instance.PlatformService);
-                
+                Instance.OnShownInterstitial?.Invoke(Instance);
+
                 if (GameApp.IsDebugMode)
-                {
-                    Debug.Log($"[GameSDK.Advertisement]: YaAdvertisement interstitial opened!");
-                }
+                    Debug.Log("[GameSDK.Advertisement]: YaAdvertisement interstitial opened!");
             }
-            
+
             [MonoPInvokeCallback(typeof(Action))]
             static void OnClose(bool wasShown)
             {
                 if (wasShown)
                 {
-                    Ads.Interstitial.OnClosedHandler(_instance.PlatformService);
-                    
+                    Instance.OnClosedInterstitial?.Invoke(Instance);
+
                     if (GameApp.IsDebugMode)
-                    {
-                        Debug.Log($"[GameSDK.Advertisement]: YaAdvertisement interstitial closed!");
-                    }
+                        Debug.Log("[GameSDK.Advertisement]: YaAdvertisement interstitial closed!");
                 }
                 else
                 {
-                    Ads.Interstitial.OnShowFailedHandler(_instance.PlatformService);
-                    
+                    Instance.OnShownFailedInterstitial?.Invoke(Instance);
+
                     if (GameApp.IsDebugMode)
-                    {
-                        Debug.Log($"[GameSDK.Advertisement]: YaAdvertisement an error occurred while displaying an ad!");
-                    }
+                        Debug.Log("[GameSDK.Advertisement]: YaAdvertisement an error occurred while displaying an ad!");
                 }
             }
-            
+
             [MonoPInvokeCallback(typeof(Action))]
             static void OnError(string error)
             {
-                Ads.Interstitial.OnErrorHandler(_instance.PlatformService);
-                    
+                Instance.OnErrorInterstitial?.Invoke(Instance);
+
                 if (GameApp.IsDebugMode)
-                {
-                    Debug.Log($"[GameSDK.Advertisement]: YaAdvertisement an error occurred while displaying an ad with error {error}!");
-                }
+                    Debug.Log(
+                        $"[GameSDK.Advertisement]: YaAdvertisement an error occurred while displaying an ad with error {error}!");
             }
-            
+
             [MonoPInvokeCallback(typeof(Action))]
             static void OnOffline()
             {
-                Ads.Interstitial.OnErrorHandler(_instance.PlatformService);
-                    
+                Instance.OnErrorInterstitial?.Invoke(Instance);
+
                 if (GameApp.IsDebugMode)
-                {
-                    Debug.Log($"[GameSDK.Advertisement]: YaAdvertisement an error occurred while displaying an ad, the player switched to offline mode!");
-                }
+                    Debug.Log(
+                        "[GameSDK.Advertisement]: YaAdvertisement an error occurred while displaying an ad, the player switched to offline mode!");
             }
         }
 
@@ -99,49 +91,42 @@ namespace GameSDK.Plugins.YaGames.Advertisement
             OnClose();
 #endif
             return Task.CompletedTask;
-            
+
             [MonoPInvokeCallback(typeof(Action))]
             static void OnOpen()
             {
-                Ads.Rewarded.OnShowedHandler(_instance.PlatformService);
-                
+                Instance.OnShownRewarded?.Invoke(Instance);
+
                 if (GameApp.IsDebugMode)
-                {
-                    Debug.Log($"[GameSDK.Advertisement]: YaAdvertisement rewarded opened!");
-                }
+                    Debug.Log("[GameSDK.Advertisement]: YaAdvertisement rewarded opened!");
             }
-            
+
             [MonoPInvokeCallback(typeof(Action))]
             static void OnClose()
             {
-                Ads.Rewarded.OnClosedHandler(_instance.PlatformService);
-                    
+                Instance.OnClosedRewarded?.Invoke(Instance);
+
                 if (GameApp.IsDebugMode)
-                {
-                    Debug.Log($"[GameSDK.Advertisement]: YaAdvertisement rewarded closed!");
-                }
+                    Debug.Log("[GameSDK.Advertisement]: YaAdvertisement rewarded closed!");
             }
-            
+
             [MonoPInvokeCallback(typeof(Action))]
             static void OnError(string error)
             {
-                Ads.Rewarded.OnErrorHandler(_instance.PlatformService);
-                    
+                Instance.OnErrorRewarded?.Invoke(Instance);
+
                 if (GameApp.IsDebugMode)
-                {
-                    Debug.Log($"[GameSDK.Advertisement]: YaAdvertisement an error occurred while displaying an rewarded ad with error {error}!");
-                }
+                    Debug.Log(
+                        $"[GameSDK.Advertisement]: YaAdvertisement an error occurred while displaying an rewarded ad with error {error}!");
             }
-            
+
             [MonoPInvokeCallback(typeof(Action))]
             static void OnRewarded()
             {
-                Ads.Rewarded.OnRewardedHandler(_instance.PlatformService);
-                    
+                Instance.OnRewardedRewarded?.Invoke(Instance);
+
                 if (GameApp.IsDebugMode)
-                {
-                    Debug.Log($"[GameSDK.Advertisement]: YaAdvertisement you can get a reward for watching a video!");
-                }
+                    Debug.Log("[GameSDK.Advertisement]: YaAdvertisement you can get a reward for watching a video!");
             }
         }
 
@@ -153,32 +138,29 @@ namespace GameSDK.Plugins.YaGames.Advertisement
             OnOpen();
 #endif
             return Task.CompletedTask;
-            
+
             [MonoPInvokeCallback(typeof(Action))]
             static void OnOpen()
             {
-                Ads.Banner.OnShowedHandler(_instance.PlatformService);
-                
+                Instance.OnShownBanner?.Invoke(Instance);
+
                 if (GameApp.IsDebugMode)
-                {
-                    Debug.Log($"[GameSDK.Advertisement]: YaAdvertisement banner opened!");
-                }
+                    Debug.Log("[GameSDK.Advertisement]: YaAdvertisement banner opened!");
             }
 
             [MonoPInvokeCallback(typeof(Action))]
             static void OnError(int error)
             {
-                Ads.Banner.OnErrorHandler(_instance.PlatformService);
+                Instance.OnErrorBanner?.Invoke(Instance);
 
                 var type = (BannerErrors)error;
-                
+
                 if (GameApp.IsDebugMode)
-                {
-                    Debug.Log($"[GameSDK.Advertisement]: YaAdvertisement an error occurred while displaying an banner ad with error {type}!");
-                }
+                    Debug.Log(
+                        $"[GameSDK.Advertisement]: YaAdvertisement an error occurred while displaying an banner ad with error {type}!");
             }
         }
-        
+
         public Task HideBanner()
         {
 #if !UNITY_EDITOR
@@ -187,44 +169,66 @@ namespace GameSDK.Plugins.YaGames.Advertisement
             OnHided();
 #endif
             return Task.CompletedTask;
-            
+
             [MonoPInvokeCallback(typeof(Action))]
             static void OnHided()
             {
-                Ads.Banner.OnHiddenHandler(_instance.PlatformService);
-                
+                Instance.OnHiddenBanner?.Invoke(Instance);
+
                 if (GameApp.IsDebugMode)
-                {
-                    Debug.Log($"[GameSDK.Advertisement]: YaAdvertisement banner is hidden!");
-                }
+                    Debug.Log("[GameSDK.Advertisement]: YaAdvertisement banner is hidden!");
             }
 
             [MonoPInvokeCallback(typeof(Action))]
             static void OnError(int error)
             {
-                Ads.Banner.OnErrorHandler(_instance.PlatformService);
+                Instance.OnErrorBanner?.Invoke(Instance);
 
                 var type = (BannerErrors)error;
-                
+
                 if (GameApp.IsDebugMode)
-                {
-                    Debug.Log($"[GameSDK.Advertisement]: YaAdvertisement an error occurred while hidden an banner ad with error {type}!");
-                }
+                    Debug.Log(
+                        $"[GameSDK.Advertisement]: YaAdvertisement an error occurred while hidden an banner ad with error {type}!");
             }
         }
+
+        public event Action<IBannerAds> OnShownBanner;
+        public event Action<IBannerAds> OnHiddenBanner;
+        public event Action<IBannerAds> OnErrorBanner;
+
+        public event Action<IInterstitialAds> OnShownInterstitial;
+        public event Action<IInterstitialAds> OnClosedInterstitial;
+        public event Action<IInterstitialAds> OnShownFailedInterstitial;
+        public event Action<IInterstitialAds> OnErrorInterstitial;
+        public event Action<IInterstitialAds> OnClickedInterstitial;
+
+        public event Action<IRewardedAds> OnShownRewarded;
+        public event Action<IRewardedAds> OnClosedRewarded;
+        public event Action<IRewardedAds> OnShownFailedRewarded;
+        public event Action<IRewardedAds> OnErrorRewarded;
+        public event Action<IRewardedAds> OnClickedRewarded;
+        public event Action<IRewardedAds> OnRewardedRewarded;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void RegisterInternal()
         {
-            Ads.Instance.Register(_instance);
+            Ads.Register(Instance);
+            Ads.Interstitial.Register(Instance);
+            Ads.Rewarded.Register(Instance);
+            Ads.Banner.Register(Instance);
         }
-        
+
         [DllImport("__Internal")]
-        private static extern void YaGamesShowInterstitial(Action onOpen, Action<bool> onClose, Action<string> onError, Action onOffline);
+        private static extern void YaGamesShowInterstitial(Action onOpen, Action<bool> onClose, Action<string> onError,
+            Action onOffline);
+
         [DllImport("__Internal")]
-        private static extern void YaGamesShowRewarded(Action onOpen, Action onClose, Action<string> onError, Action onRewarded);
+        private static extern void YaGamesShowRewarded(Action onOpen, Action onClose, Action<string> onError,
+            Action onRewarded);
+
         [DllImport("__Internal")]
         private static extern void YaGamesShowBanner(Action onOpen, Action<int> onError);
+
         [DllImport("__Internal")]
         private static extern void YaGamesHideBanner(Action onHided, Action<int> onError);
     }

@@ -4,9 +4,6 @@ namespace GameSDK.Core
 {
     public class GameAppRunner : MonoBehaviour
     {
-        private void Awake()
-        {
-            GameApp.Instance.RegisterRunner(this);
-        }
+        private void Awake() => GameApp.RegisterRunner(this);
     }
 }

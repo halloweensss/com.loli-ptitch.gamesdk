@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using GameSDK.Core;
 using UnityEngine;
 
@@ -9,99 +10,155 @@ namespace GameSDK.Advertisement
         public event Action OnShowed;
         public event Action OnHidden;
         public event Action OnError;
-
+        
+        private readonly Dictionary<PlatformServiceType, IBannerAds> _services = new(2);
+        
         internal Banner()
         {
             
         }
         
-        public async void Show()
+        public void Register(IBannerAds service)
         {
-            if (Ads.IsInitialized == false)
-            {
-                await Ads.Initialize();
-            }
-
-            if (Ads.IsInitialized == false)
+            if (_services.TryAdd(service.PlatformService, service) == false)
             {
                 if (GameApp.IsDebugMode)
-                {
                     Debug.LogWarning(
-                        $"[GameSDK.Advertisement]: Before show banner, initialize the ads\nAds.Initialize()!");
-                }
+                        $"[GameSDK.Advertisement.Banner]: The platform {service.PlatformService} has already been registered!");
 
                 return;
             }
+            
+            service.OnShownBanner += OnShowedHandler;
+            service.OnHiddenBanner += OnHiddenHandler;
+            service.OnErrorBanner += OnErrorHandler;
 
-            foreach (var service in Ads.Services)
+            if (GameApp.IsDebugMode)
+                Debug.Log($"[GameSDK.Advertisement.Banner]: Platform {service.PlatformService} is registered!");
+        }
+        
+        public void Unregister(IBannerAds service)
+        {
+            if (_services.Remove(service.PlatformService) == false)
             {
-                try
+                if (GameApp.IsDebugMode)
+                    Debug.LogWarning(
+                        $"[GameSDK.Advertisement.Banner]: The platform {service.PlatformService} has not been registered!");
+
+                return;
+            }
+            
+            service.OnShownBanner -= OnShowedHandler;
+            service.OnHiddenBanner -= OnHiddenHandler;
+            service.OnErrorBanner -= OnErrorHandler;
+
+            if (GameApp.IsDebugMode)
+                Debug.Log($"[GameSDK.Advertisement.Banner]: Platform {service.PlatformService} is unregistered!");
+        }
+        
+        public async void Show()
+        {
+            try
+            {
+                if (Ads.IsInitialized == false)
                 {
-                    await service.Value.ShowBanner();
+                    await Ads.Initialize();
                 }
-                catch (Exception e)
+
+                if (Ads.IsInitialized == false)
                 {
                     if (GameApp.IsDebugMode)
                     {
-                        Debug.LogError(
-                            $"[GameSDK.Advertisement]: An show banner error has occurred {e.Message}!");
+                        Debug.LogWarning(
+                            $"[GameSDK.Advertisement]: Before show banner, initialize the ads\nAds.Initialize()!");
                     }
 
-                    OnErrorHandler(service.Key);
                     return;
                 }
+
+                foreach (var service in _services)
+                {
+                    try
+                    {
+                        await service.Value.ShowBanner();
+                    }
+                    catch (Exception e)
+                    {
+                        if (GameApp.IsDebugMode)
+                        {
+                            Debug.LogError(
+                                $"[GameSDK.Advertisement]: An show banner error has occurred {e.Message}!");
+                        }
+
+                        OnErrorHandler(service.Value);
+                        return;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                if (GameApp.IsDebugMode)
+                    Debug.LogError($"[GameSDK.Advertisement]: An show banner error has occurred {e.Message}!");
             }
         }
         
         public async void Hide()
         {
-            if (Ads.IsInitialized == false)
+            try
             {
-                await Ads.Initialize();
-            }
-
-            if (Ads.IsInitialized == false)
-            {
-                if (GameApp.IsDebugMode)
+                if (Ads.IsInitialized == false)
                 {
-                    Debug.LogWarning(
-                        $"[GameSDK.Advertisement]: Before hide banner, initialize the ads\nAds.Initialize()!");
+                    await Ads.Initialize();
                 }
 
-                return;
-            }
-
-            foreach (var service in Ads.Services)
-            {
-                try
-                {
-                    await service.Value.HideBanner();
-                }
-                catch (Exception e)
+                if (Ads.IsInitialized == false)
                 {
                     if (GameApp.IsDebugMode)
                     {
-                        Debug.LogError(
-                            $"[GameSDK.Advertisement]: An hide banner error has occurred {e.Message}!");
+                        Debug.LogWarning(
+                            $"[GameSDK.Advertisement]: Before hide banner, initialize the ads\nAds.Initialize()!");
                     }
 
-                    OnErrorHandler(service.Key);
                     return;
                 }
+
+                foreach (var service in _services)
+                {
+                    try
+                    {
+                        await service.Value.HideBanner();
+                    }
+                    catch (Exception e)
+                    {
+                        if (GameApp.IsDebugMode)
+                        {
+                            Debug.LogError(
+                                $"[GameSDK.Advertisement]: An hide banner error has occurred {e.Message}!");
+                        }
+
+                        OnErrorHandler(service.Value);
+                        return;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                if (GameApp.IsDebugMode)
+                    Debug.LogError($"[GameSDK.Advertisement]: An hide banner error has occurred {e.Message}!");
             }
         }
 
-        internal void OnShowedHandler(PlatformServiceType platform)
+        internal void OnShowedHandler(IBannerAds platform)
         {
             OnShowed?.Invoke();
         }
 
-        internal void OnHiddenHandler(PlatformServiceType platform)
+        internal void OnHiddenHandler(IBannerAds platform)
         {
             OnHidden?.Invoke();
         }
         
-        internal void OnErrorHandler(PlatformServiceType platform)
+        internal void OnErrorHandler(IBannerAds platform)
         {
             OnError?.Invoke();
         }

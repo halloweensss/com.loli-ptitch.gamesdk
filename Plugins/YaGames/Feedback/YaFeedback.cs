@@ -12,13 +12,15 @@ namespace GameSDK.Plugins.YaGames.Feedback
 {
     public class YaFeedback : IFeedbackApp
     {
-        private static readonly YaFeedback _instance = new YaFeedback();
+        private static readonly YaFeedback Instance = new();
 
         private YaFailReviewReason _failReviewReason;
         private bool _result;
         private ReviewStatus _status;
+        public static ReviewStatus ReviewStatus => Instance._status;
         public PlatformServiceType PlatformService => PlatformServiceType.YaGames;
         public InitializationStatus InitializationStatus => InitializationStatus.Initialized;
+
         public async Task<(bool, FailReviewReason)> CanReview()
         {
 #if !UNITY_EDITOR
@@ -39,27 +41,23 @@ namespace GameSDK.Plugins.YaGames.Feedback
             [MonoPInvokeCallback(typeof(Action))]
             static void OnSuccess()
             {
-                _instance._result = true;
-                _instance._failReviewReason = YaFailReviewReason.Unknown;
-                _instance._status = ReviewStatus.Success;
+                Instance._result = true;
+                Instance._failReviewReason = YaFailReviewReason.Unknown;
+                Instance._status = ReviewStatus.Success;
 
                 if (GameApp.IsDebugMode)
-                {
-                    Debug.Log($"[GameSDK.Feedback]: YaFeedback review possible!");
-                }
+                    Debug.Log("[GameSDK.Feedback]: YaFeedback review possible!");
             }
 
             [MonoPInvokeCallback(typeof(Action<int>))]
             static void OnError(int reason)
             {
-                _instance._result = false;
-                _instance._failReviewReason = (YaFailReviewReason)reason;
-                _instance._status = ReviewStatus.Error;
+                Instance._result = false;
+                Instance._failReviewReason = (YaFailReviewReason)reason;
+                Instance._status = ReviewStatus.Error;
 
                 if (GameApp.IsDebugMode)
-                {
-                    Debug.Log($"[GameSDK.Feedback]: YaFeedback review impossible!");
-                }
+                    Debug.Log("[GameSDK.Feedback]: YaFeedback review impossible!");
             }
         }
 
@@ -78,16 +76,12 @@ namespace GameSDK.Plugins.YaGames.Feedback
                         canReview = await CanReview();
 
                         if (canReview.Item1 == false)
-                        {
                             return canReview;
-                        }
                     }
                     else
                     {
                         if (GameApp.IsDebugMode)
-                        {
-                            Debug.Log($"[GameSDK.Feedback]: Before leaving a review, log in YaFeedback!");
-                        }
+                            Debug.Log("[GameSDK.Feedback]: Before leaving a review, log in YaFeedback!");
 
                         return canReview;
                     }
@@ -97,7 +91,7 @@ namespace GameSDK.Plugins.YaGames.Feedback
                     return canReview;
                 }
             }
-            
+
 #if !UNITY_EDITOR
             _status = ReviewStatus.Waiting;
             YaGamesRequestReview(OnSuccess, OnError);
@@ -116,32 +110,29 @@ namespace GameSDK.Plugins.YaGames.Feedback
             [MonoPInvokeCallback(typeof(Action))]
             static void OnSuccess()
             {
-                _instance._result = true;
-                _instance._failReviewReason = YaFailReviewReason.Unknown;
-                _instance._status = ReviewStatus.Success;
+                Instance._result = true;
+                Instance._failReviewReason = YaFailReviewReason.Unknown;
+                Instance._status = ReviewStatus.Success;
 
                 if (GameApp.IsDebugMode)
-                {
-                    Debug.Log($"[GameSDK.Feedback]: YaFeedback review has been delivered!");
-                }
+                    Debug.Log("[GameSDK.Feedback]: YaFeedback review has been delivered!");
             }
 
             [MonoPInvokeCallback(typeof(Action<int>))]
             static void OnError(int reason)
             {
-                _instance._result = false;
-                _instance._failReviewReason = (YaFailReviewReason)reason;
-                _instance._status = ReviewStatus.Error;
+                Instance._result = false;
+                Instance._failReviewReason = (YaFailReviewReason)reason;
+                Instance._status = ReviewStatus.Error;
 
                 if (GameApp.IsDebugMode)
-                {
-                    Debug.Log($"[GameSDK.Feedback]: YaFeedback review was not submitted!");
-                }
+                    Debug.Log("[GameSDK.Feedback]: YaFeedback review was not submitted!");
             }
         }
 
-        private FailReviewReason GetReason(YaFailReviewReason reason) =>
-            reason switch
+        private FailReviewReason GetReason(YaFailReviewReason reason)
+        {
+            return reason switch
             {
                 YaFailReviewReason.Unknown => FailReviewReason.Unknown,
                 YaFailReviewReason.NoAuth => FailReviewReason.NoAuth,
@@ -151,16 +142,17 @@ namespace GameSDK.Plugins.YaGames.Feedback
                 YaFailReviewReason.Canceled => FailReviewReason.Canceled,
                 _ => FailReviewReason.Unknown
             };
+        }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void RegisterInternal()
         {
-            GameFeedback.Feedback.Instance.Register(_instance);
+            GameFeedback.Feedback.Register(Instance);
         }
-        
+
         [DllImport("__Internal")]
         private static extern void YaGamesCanReview(Action onSuccess, Action<int> onError);
-        
+
         [DllImport("__Internal")]
         private static extern void YaGamesRequestReview(Action onSuccess, Action<int> onError);
     }

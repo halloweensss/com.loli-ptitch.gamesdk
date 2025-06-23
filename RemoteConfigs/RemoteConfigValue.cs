@@ -11,7 +11,7 @@ namespace GameSDK.RemoteConfigs
         private static readonly Regex BooleanTruePattern = new Regex("^(1|true|t|yes|y|on)$", RegexOptions.IgnoreCase);
         private static readonly Regex BooleanFalsePattern = new Regex("^(0|false|f|no|n|off|)$", RegexOptions.IgnoreCase);
         
-        internal RemoteConfigValue(byte[] data, ConfigValueSource source)
+        public RemoteConfigValue(byte[] data, ConfigValueSource source)
             : this()
         {
             this.Data = data;

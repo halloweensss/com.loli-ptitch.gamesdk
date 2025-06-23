@@ -8,8 +8,7 @@ namespace GameSDK.Localization
 {
     public class Localization
     {
-        private static Localization _instance;
-        private static Localization Instance => _instance ??= new Localization();
+        private static readonly Localization Instance = new();
 
         private string _currentLanguage;
         private readonly Dictionary<string, LocalizationDatabase> _databases = new(32);

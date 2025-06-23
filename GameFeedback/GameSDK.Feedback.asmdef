@@ -1,0 +1,17 @@
+{
+    "name": "GameSDK.Feedback",
+    "rootNamespace": "GameSDK",
+    "references": [
+        "GameSDK.Core",
+        "GameSDK.Authentication"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,7 +1,8 @@
+using GameSDK.Localization;
 using UnityEditor;
 using UnityEngine;
 
-namespace GameSDK.Localization.Editor
+namespace Localization.Editor
 {
     [CustomEditor(typeof(LocalizationDatabase))]
     public class LocalizationDatabaseEditor : UnityEditor.Editor

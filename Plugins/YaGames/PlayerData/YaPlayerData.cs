@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using AOT;
@@ -15,7 +14,7 @@ namespace GameSDK.Plugins.YaGames.PlayerData
 {
     public class YaPlayerData : IAuthApp, IStorageApp
     {
-        private static readonly YaPlayerData _instance = new YaPlayerData();
+        private static readonly YaPlayerData Instance = new();
         private InitializationStatus _status = InitializationStatus.None;
         private StorageStatus _lastStorageStatus = StorageStatus.None;
         private string _lastStorageData = string.Empty;
@@ -26,7 +25,7 @@ namespace GameSDK.Plugins.YaGames.PlayerData
         private Coroutine _coroutineDelayedSave = null;
         private readonly Dictionary<AvatarSizeType, string> _avatars = new(4);
 
-        private static readonly Dictionary<string, PayingStatusType> _payingStatuses = new()
+        private static readonly Dictionary<string, PayingStatusType> PayingStatuses = new()
         {
             { "unknown", PayingStatusType.Unknown },
             { "not_paying", PayingStatusType.Paying },
@@ -34,7 +33,7 @@ namespace GameSDK.Plugins.YaGames.PlayerData
             { "paying", PayingStatusType.Paying }
         };
 
-        private static readonly Dictionary<AvatarSizeType, string> _avatarSizes = new()
+        private static readonly Dictionary<AvatarSizeType, string> AvatarSizes = new()
         {
             { AvatarSizeType.Small, "small" },
             { AvatarSizeType.Medium, "medium" },
@@ -171,11 +170,11 @@ namespace GameSDK.Plugins.YaGames.PlayerData
             [MonoPInvokeCallback(typeof(Action))]
             static void OnSuccess()
             {
-                _instance._status = InitializationStatus.Initialized;
-                _instance.InitializeId();
-                _instance.InitializeName();
-                _instance.InitializeMode();
-                _instance.InitializePayingStatus();
+                Instance._status = InitializationStatus.Initialized;
+                Instance.InitializeId();
+                Instance.InitializeName();
+                Instance.InitializeMode();
+                Instance.InitializePayingStatus();
                 
                 if (GameApp.IsDebugMode)
                 {
@@ -186,7 +185,7 @@ namespace GameSDK.Plugins.YaGames.PlayerData
             [MonoPInvokeCallback(typeof(Action))]
             static void OnError()
             {
-                _instance._status = InitializationStatus.Error;
+                Instance._status = InitializationStatus.Error;
                 if (GameApp.IsDebugMode)
                 {
                     Debug.LogWarning($"[GameSDK.Authentication]: An error occurred while sign in the YaPlayerData!");
@@ -220,11 +219,11 @@ namespace GameSDK.Plugins.YaGames.PlayerData
             [MonoPInvokeCallback(typeof(Action))]
             static void OnSuccess()
             {
-                _instance._status = InitializationStatus.Initialized;
-                _instance.InitializeId();
-                _instance.InitializeName();
-                _instance.InitializeMode();
-                _instance.InitializePayingStatus();
+                Instance._status = InitializationStatus.Initialized;
+                Instance.InitializeId();
+                Instance.InitializeName();
+                Instance.InitializeMode();
+                Instance.InitializePayingStatus();
                 
                 if (GameApp.IsDebugMode)
                 {
@@ -235,7 +234,7 @@ namespace GameSDK.Plugins.YaGames.PlayerData
             [MonoPInvokeCallback(typeof(Action))]
             static void OnError()
             {
-                _instance._status = InitializationStatus.Error;
+                Instance._status = InitializationStatus.Error;
                 if (GameApp.IsDebugMode)
                 {
                     Debug.LogWarning($"[GameSDK.Authentication]: An error occurred while sign in the YaPlayerData!");
@@ -369,13 +368,13 @@ namespace GameSDK.Plugins.YaGames.PlayerData
             [MonoPInvokeCallback(typeof(Action))]
             static void OnSuccess()
             {
-                _instance._lastStorageStatus = StorageStatus.Success;
+                Instance._lastStorageStatus = StorageStatus.Success;
 
                 var runner = GameApp.Runner;
 
                 if (runner != null)
                 {
-                    _instance._coroutineDelayedSave ??= runner.StartCoroutine(DelayedSave());
+                    Instance._coroutineDelayedSave ??= runner.StartCoroutine(DelayedSave());
                     return;
                 }
 
@@ -391,7 +390,7 @@ namespace GameSDK.Plugins.YaGames.PlayerData
             [MonoPInvokeCallback(typeof(Action))]
             static void OnError()
             {
-                _instance._lastStorageStatus = StorageStatus.Error;
+                Instance._lastStorageStatus = StorageStatus.Error;
                 if (GameApp.IsDebugMode)
                 {
                     Debug.LogWarning($"[GameSDK.Storage]: Failed to save data in the YaPlayerData!");
@@ -408,7 +407,7 @@ namespace GameSDK.Plugins.YaGames.PlayerData
                 yield break;
 #endif
                 OnSuccessAll();
-                _instance._coroutineDelayedSave = null;
+                Instance._coroutineDelayedSave = null;
                 yield break;
             }
 
@@ -479,8 +478,8 @@ namespace GameSDK.Plugins.YaGames.PlayerData
             [MonoPInvokeCallback(typeof(Action<string>))]
             static void OnSuccess(string data)
             {
-                _instance._lastStorageStatus = StorageStatus.Success;
-                _instance._lastStorageData = data;
+                Instance._lastStorageStatus = StorageStatus.Success;
+                Instance._lastStorageData = data;
                 if (GameApp.IsDebugMode)
                 {
                     Debug.Log($"[GameSDK.Storage]: Data loaded from the YaPlayerData!");
@@ -490,7 +489,7 @@ namespace GameSDK.Plugins.YaGames.PlayerData
             [MonoPInvokeCallback(typeof(Action))]
             static void OnError()
             {
-                _instance._lastStorageStatus = StorageStatus.Error;
+                Instance._lastStorageStatus = StorageStatus.Error;
                 if (GameApp.IsDebugMode)
                 {
                     Debug.LogWarning($"[GameSDK.Storage]: Failed to load data from the YaPlayerData!");
@@ -501,8 +500,8 @@ namespace GameSDK.Plugins.YaGames.PlayerData
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void RegisterInternal()
         {
-            Auth.Instance.Register(_instance);
-            Storage.Instance.Register(_instance);
+            Auth.Register(Instance);
+            Storage.Register(Instance);
         }
 
 

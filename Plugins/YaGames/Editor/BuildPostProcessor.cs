@@ -1,13 +1,10 @@
-using System;
 using System.IO;
-using System.Linq;
-using System.Text.RegularExpressions;
-using Extensions;
+using GameSDK.Extensions;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 
-namespace GameSDK.Plugins.YaGames.Core
+namespace Plugins.YaGames.Editor
 {
     public class BuildPostProcessor : IPostprocessBuildWithReport
     {

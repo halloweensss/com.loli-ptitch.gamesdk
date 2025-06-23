@@ -1,0 +1,17 @@
+{
+    "name": "GameSDK.YaGames.Purchases",
+    "rootNamespace": "GameSDK",
+    "references": [
+        "GameSDK.Core",
+        "GameSDK.Purchases"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -3,7 +3,7 @@ using GameSDK.Core;
 
 namespace GameSDK.Shortcut
 {
-    internal interface IShortcutApp : IGameSDKService
+    public interface IShortcutApp : IGameSDKService
     {
         Task<bool> Create();
         Task<bool> CanCreate();

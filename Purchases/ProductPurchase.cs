@@ -18,6 +18,14 @@ namespace GameSDK.Purchases
 
        private Purchases _purchases;
        
+       public ProductPurchase(string id, string token, string payload, string signature)
+       {
+           Id = id;
+           Token = token;
+           Payload = payload;
+           Signature = signature;
+       }
+       
        internal void InitializePurchase(Purchases purchases)
        {
            _purchases = purchases;

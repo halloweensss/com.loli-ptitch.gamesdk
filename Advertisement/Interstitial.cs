@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using GameSDK.Core;
 using UnityEngine;
 
@@ -12,78 +13,151 @@ namespace GameSDK.Advertisement
         public event Action OnError;
         public event Action OnClicked;
         
+        private readonly Dictionary<PlatformServiceType, IInterstitialAds> _services = new(2);
+        
         internal Interstitial()
         {
             
         }
-        
-        public async void Show()
+
+        public void Register(IInterstitialAds service)
         {
-            if (Ads.IsInitialized == false)
-            {
-                await Ads.Initialize();
-            }
-            
-            if (Ads.IsInitialized == false)
+            if (_services.TryAdd(service.PlatformService, service) == false)
             {
                 if (GameApp.IsDebugMode)
-                {
                     Debug.LogWarning(
-                        $"[GameSDK.Advertisement]: Before show interstitial, initialize the ads\nAds.Initialize()!");
-                }
-                
+                        $"[GameSDK.Advertisement.Interstitial]: The platform {service.PlatformService} has already been registered!");
+
                 return;
             }
 
-            await GameApp.GameStop();
-            
-            foreach (var service in Ads.Services)
+            service.OnShownInterstitial += OnShowedHandler;
+            service.OnClosedInterstitial += OnClosedHandler;
+            service.OnShownFailedInterstitial += OnShowFailedHandler;
+            service.OnErrorInterstitial += OnErrorHandler;
+            service.OnClickedInterstitial += OnClickedHandler;
+
+            if (GameApp.IsDebugMode)
+                Debug.Log($"[GameSDK.Advertisement.Interstitial]: Platform {service.PlatformService} is registered!");
+        }
+        
+        public void Unregister(IInterstitialAds service)
+        {
+            if (_services.Remove(service.PlatformService) == false)
             {
-                try
-                {
-                    await service.Value.ShowInterstitial();
-                }
-                catch (Exception e)
+                if (GameApp.IsDebugMode)
+                    Debug.LogWarning(
+                        $"[GameSDK.Advertisement.Interstitial]: The platform {service.PlatformService} has not been registered!");
+
+                return;
+            }
+
+            service.OnShownInterstitial -= OnShowedHandler;
+            service.OnClosedInterstitial -= OnClosedHandler;
+            service.OnShownFailedInterstitial -= OnShowFailedHandler;
+            service.OnErrorInterstitial -= OnErrorHandler;
+            service.OnClickedInterstitial -= OnClickedHandler;
+            
+            if (GameApp.IsDebugMode)
+                Debug.Log($"[GameSDK.Advertisement.Interstitial]: Platform {service.PlatformService} is unregistered!");
+        }
+
+        public async void Show()
+        {
+            try
+            {
+                if (Ads.IsInitialized == false)
+                    await Ads.Initialize();
+            
+                if (Ads.IsInitialized == false)
                 {
                     if (GameApp.IsDebugMode)
                     {
-                        Debug.LogError($"[GameSDK.Advertisement]: An show interstitial error has occurred {e.Message}!");
+                        Debug.LogWarning(
+                            $"[GameSDK.Advertisement]: Before show interstitial, initialize the ads\nAds.Initialize()!");
                     }
-
-                    OnErrorHandler(service.Key);
+                
                     return;
                 }
-            }
+
+                await GameApp.GameStop();
             
+                foreach (var service in _services)
+                {
+                    try
+                    {
+                        await service.Value.ShowInterstitial();
+                    }
+                    catch (Exception e)
+                    {
+                        if (GameApp.IsDebugMode)
+                        {
+                            Debug.LogError($"[GameSDK.Advertisement]: An show interstitial error has occurred {e.Message}!");
+                        }
+
+                        OnErrorHandler(service.Value);
+                        return;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                if (GameApp.IsDebugMode)
+                    Debug.LogError($"[GameSDK.Advertisement]: An show interstitial error has occurred {e.Message}!");
+            }
         }
 
-        internal void OnShowedHandler(PlatformServiceType platform)
+        private void OnShowedHandler(IInterstitialAds platform)
         {
             OnShowed?.Invoke();
         }
 
-        internal async void OnClosedHandler(PlatformServiceType platform)
+        private async void OnClosedHandler(IInterstitialAds platform)
         {
-            OnClosed?.Invoke();
+            try
+            {
+                OnClosed?.Invoke();
             
-            await GameApp.GameStart();
+                await GameApp.GameStart();
+            }
+            catch (Exception e)
+            {
+                if (GameApp.IsDebugMode)
+                    Debug.LogError($"[GameSDK.Advertisement]: An show interstitial error has occurred {e.Message}!");
+            }
         }
 
-        internal async void OnShowFailedHandler(PlatformServiceType platform)
+        private async void OnShowFailedHandler(IInterstitialAds platform)
         {
-            OnShowFailed?.Invoke();
+            try
+            {
+                OnShowFailed?.Invoke();
             
-            await GameApp.GameStart();
+                await GameApp.GameStart();
+            }
+            catch (Exception e)
+            {
+                if (GameApp.IsDebugMode)
+                    Debug.LogError($"[GameSDK.Advertisement]: An show interstitial error has occurred {e.Message}!");
+            }
         }
         
-        internal async void OnErrorHandler(PlatformServiceType platform)
+        private async void OnErrorHandler(IInterstitialAds platform)
         {
-            OnError?.Invoke();
+            try
+            {
+                OnError?.Invoke();
             
-            await GameApp.GameStart();
+                await GameApp.GameStart();
+            }
+            catch (Exception e)
+            {
+                if (GameApp.IsDebugMode)
+                    Debug.LogError($"[GameSDK.Advertisement]: An show interstitial error has occurred {e.Message}!");
+            }
         }
-        
-        internal void OnClickedHandler(PlatformServiceType platform)
+
+        private void OnClickedHandler(IInterstitialAds platform)
         {
             OnClicked?.Invoke();
         }

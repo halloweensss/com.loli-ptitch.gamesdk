@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using AOT;
@@ -12,17 +11,16 @@ namespace GameSDK.Plugins.YaGames.Purchases
 {
     public class YaPurchases : IPurchasesApp
     {
-        private static readonly YaPurchases _instance = new YaPurchases();
+        private static readonly YaPurchases Instance = new();
+        private ProductPurchase[] _productPurchases;
+        private ProductPurchase _productsPurchase;
 
         private Product[] _productsReceived;
-        private ProductPurchase _productsPurchase;
-        private ProductPurchase[] _productPurchases;
-        
-        private PurchaseStatus _statusResponse = PurchaseStatus.None;
 
-        private InitializationStatus _status = InitializationStatus.None;
+        private PurchaseStatus _statusResponse = PurchaseStatus.None;
         public PlatformServiceType PlatformService => PlatformServiceType.YaGames;
-        public InitializationStatus InitializationStatus => _status;
+        public InitializationStatus InitializationStatus { get; private set; } = InitializationStatus.None;
+
         public async Task Initialize()
         {
 #if !UNITY_EDITOR
@@ -32,7 +30,7 @@ namespace GameSDK.Plugins.YaGames.Purchases
             while (_status == InitializationStatus.Waiting)
                 await Task.Yield();
 #else
-            _status = InitializationStatus.Waiting;
+            InitializationStatus = InitializationStatus.Waiting;
             OnSuccess();
             await Task.CompletedTask;
 #endif
@@ -40,22 +38,18 @@ namespace GameSDK.Plugins.YaGames.Purchases
             [MonoPInvokeCallback(typeof(Action))]
             static void OnSuccess()
             {
-                _instance._status = InitializationStatus.Initialized;
+                Instance.InitializationStatus = InitializationStatus.Initialized;
 
                 if (GameApp.IsDebugMode)
-                {
-                    Debug.Log($"[GameSDK.Purchases]: YaGamesApp initialized!");
-                }
+                    Debug.Log("[GameSDK.Purchases]: YaGamesApp initialized!");
             }
 
             [MonoPInvokeCallback(typeof(Action))]
             static void OnError()
             {
-                _instance._status = InitializationStatus.Error;
+                Instance.InitializationStatus = InitializationStatus.Error;
                 if (GameApp.IsDebugMode)
-                {
-                    Debug.Log($"[GameSDK.Purchases]: An error occurred while initializing the YaGamesApp!");
-                }
+                    Debug.Log("[GameSDK.Purchases]: An error occurred while initializing the YaGamesApp!");
             }
         }
 
@@ -90,8 +84,8 @@ namespace GameSDK.Plugins.YaGames.Purchases
                     priceValue = "0.01"
                 }
             };
-            
-            var catalog = new YaCatalog()
+
+            var catalog = new YaCatalog
             {
                 products = products
             };
@@ -100,19 +94,19 @@ namespace GameSDK.Plugins.YaGames.Purchases
 #endif
 
             return (_statusResponse == PurchaseStatus.Success, _productsReceived);
-            
+
             [MonoPInvokeCallback(typeof(Action<string>))]
             static void OnSuccess(string data)
             {
                 var products = JsonUtility.FromJson<YaCatalog>(data).products;
 
-                _instance._productsReceived = new Product[products.Length];
+                Instance._productsReceived = new Product[products.Length];
 
-                for(int i = 0; i < products.Length; i++)
+                for (var i = 0; i < products.Length; i++)
                 {
                     var product = products[i];
 
-                    _instance._productsReceived[i] = new Product()
+                    Instance._productsReceived[i] = new Product
                     {
                         Id = product.id,
                         Title = product.title,
@@ -122,25 +116,21 @@ namespace GameSDK.Plugins.YaGames.Purchases
                         PriceValue = product.priceValue
                     };
                 }
-                
-                _instance._statusResponse = PurchaseStatus.Success;
+
+                Instance._statusResponse = PurchaseStatus.Success;
 
                 if (GameApp.IsDebugMode)
-                {
-                    Debug.Log($"[GameSDK.Purchases]: YaGamesApp catalog received!");
-                }
+                    Debug.Log("[GameSDK.Purchases]: YaGamesApp catalog received!");
             }
 
             [MonoPInvokeCallback(typeof(Action<string>))]
             static void OnError(string data)
             {
-                _instance._productsReceived = null;
-                _instance._statusResponse = PurchaseStatus.Error;
+                Instance._productsReceived = null;
+                Instance._statusResponse = PurchaseStatus.Error;
 
                 if (GameApp.IsDebugMode)
-                {
                     Debug.Log($"[GameSDK.Purchases]: An error occurred while getting catalog the YaGamesApp\n{data}!");
-                }
             }
         }
 
@@ -154,49 +144,45 @@ namespace GameSDK.Plugins.YaGames.Purchases
                 await Task.Yield();
 #else
             _statusResponse = PurchaseStatus.Waiting;
-            OnSuccess(JsonUtility.ToJson(new YaProductPurchase()
+            OnSuccess(JsonUtility.ToJson(new YaProductPurchase
             {
                 productID = id,
                 purchaseToken = $"{id}_token",
                 signature = string.Empty,
-                developerPayload = developerPayload,
+                developerPayload = developerPayload
             }));
             await Task.CompletedTask;
 #endif
 
             return (_statusResponse == PurchaseStatus.Success, _productsPurchase);
-            
+
             [MonoPInvokeCallback(typeof(Action<string>))]
             static void OnSuccess(string data)
             {
                 var product = JsonUtility.FromJson<YaProductPurchase>(data);
 
-                _instance._productsPurchase = new ProductPurchase()
-                {
-                    Id = product.productID,
-                    Payload = product.developerPayload,
-                    Signature = product.signature,
-                    Token = product.purchaseToken
-                };
-                
-                _instance._statusResponse = PurchaseStatus.Success;
+                Instance._productsPurchase = new ProductPurchase
+                (
+                    product.productID,
+                    product.purchaseToken,
+                    product.developerPayload,
+                    product.signature
+                );
+
+                Instance._statusResponse = PurchaseStatus.Success;
 
                 if (GameApp.IsDebugMode)
-                {
-                    Debug.Log($"[GameSDK.Purchases]: YaGamesApp product purchased!");
-                }
+                    Debug.Log("[GameSDK.Purchases]: YaGamesApp product purchased!");
             }
 
             [MonoPInvokeCallback(typeof(Action<string>))]
             static void OnError(string data)
             {
-                _instance._productsReceived = null;
-                _instance._statusResponse = PurchaseStatus.Error;
+                Instance._productsReceived = null;
+                Instance._statusResponse = PurchaseStatus.Error;
 
                 if (GameApp.IsDebugMode)
-                {
                     Debug.Log($"[GameSDK.Purchases]: An error occurred while purchase the YaGamesApp\n{data}!");
-                }
             }
         }
 
@@ -211,7 +197,7 @@ namespace GameSDK.Plugins.YaGames.Purchases
 #else
             _statusResponse = PurchaseStatus.Waiting;
 
-            var purchases = new YaPurchasesCatalog()
+            var purchases = new YaPurchasesCatalog
             {
                 purchases = new YaProductPurchase[]
                 {
@@ -220,24 +206,24 @@ namespace GameSDK.Plugins.YaGames.Purchases
                         productID = "test_pack_1",
                         developerPayload = "test_pack_1_payload",
                         signature = "test_pack_1_signature",
-                        purchaseToken = "test_pack_1_token",
+                        purchaseToken = "test_pack_1_token"
                     },
                     new()
                     {
                         productID = "test_pack_2",
                         developerPayload = "test_pack_2_payload",
                         signature = "test_pack_2_signature",
-                        purchaseToken = "test_pack_2_token",
-                    },
+                        purchaseToken = "test_pack_2_token"
+                    }
                 }
             };
-            
+
             OnSuccess(JsonUtility.ToJson(purchases));
             await Task.CompletedTask;
 #endif
 
             return _productPurchases;
-            
+
             [MonoPInvokeCallback(typeof(Action<string>))]
             static void OnSuccess(string data)
             {
@@ -245,43 +231,39 @@ namespace GameSDK.Plugins.YaGames.Purchases
 
                 if (purchases == null || purchases.Length == 0)
                 {
-                    _instance._productPurchases = Array.Empty<ProductPurchase>();
+                    Instance._productPurchases = Array.Empty<ProductPurchase>();
                 }
                 else
                 {
-                    _instance._productPurchases = new ProductPurchase[purchases.Length];
+                    Instance._productPurchases = new ProductPurchase[purchases.Length];
 
-                    for (int i = 0; i < purchases.Length; i++)
+                    for (var i = 0; i < purchases.Length; i++)
                     {
                         var purchase = purchases[i];
-                        _instance._productPurchases[i] = new ProductPurchase()
-                        {
-                            Id = purchase.productID,
-                            Payload = purchase.developerPayload,
-                            Signature = purchase.signature,
-                            Token = purchase.purchaseToken
-                        };
+                        Instance._productPurchases[i] = new ProductPurchase
+                        (
+                            purchase.productID,
+                            purchase.purchaseToken,
+                            purchase.developerPayload,
+                            purchase.signature
+                        );
                     }
                 }
 
-                _instance._statusResponse = PurchaseStatus.Success;
+                Instance._statusResponse = PurchaseStatus.Success;
 
                 if (GameApp.IsDebugMode)
-                {
-                    Debug.Log($"[GameSDK.Purchases]: YaGamesApp purchases received!");
-                }
+                    Debug.Log("[GameSDK.Purchases]: YaGamesApp purchases received!");
             }
 
             [MonoPInvokeCallback(typeof(Action<string>))]
             static void OnError(string data)
             {
-                _instance._productPurchases = Array.Empty<ProductPurchase>();
-                _instance._statusResponse = PurchaseStatus.Error;
+                Instance._productPurchases = Array.Empty<ProductPurchase>();
+                Instance._statusResponse = PurchaseStatus.Error;
 
                 if (GameApp.IsDebugMode)
-                {
                     Debug.Log($"[GameSDK.Purchases]: An error occurred while get purchases the YaGamesApp\n{data}!");
-                }
             }
         }
 
@@ -296,49 +278,50 @@ namespace GameSDK.Plugins.YaGames.Purchases
 #else
             _statusResponse = PurchaseStatus.Waiting;
             OnSuccess();
-            
+
             await Task.CompletedTask;
 #endif
 
             return _statusResponse == PurchaseStatus.Success;
-            
+
             [MonoPInvokeCallback(typeof(Action))]
             static void OnSuccess()
             {
-                _instance._statusResponse = PurchaseStatus.Success;
+                Instance._statusResponse = PurchaseStatus.Success;
 
                 if (GameApp.IsDebugMode)
-                {
-                    Debug.Log($"[GameSDK.Purchases]: YaGamesApp product consumed!");
-                }
+                    Debug.Log("[GameSDK.Purchases]: YaGamesApp product consumed!");
             }
 
             [MonoPInvokeCallback(typeof(Action<string>))]
             static void OnError(string data)
             {
-                _instance._statusResponse = PurchaseStatus.Error;
+                Instance._statusResponse = PurchaseStatus.Error;
 
                 if (GameApp.IsDebugMode)
-                {
                     Debug.Log($"[GameSDK.Purchases]: An error occurred while consume purchase the YaGamesApp\n{data}!");
-                }
             }
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void RegisterInternal()
         {
-            GameSDK.Purchases.Purchases.Instance.Register(_instance);
+            GameSDK.Purchases.Purchases.Register(Instance);
         }
-        
+
         [DllImport("__Internal")]
         private static extern void YaPurchasesInitialize(Action onSuccess, Action onError);
+
         [DllImport("__Internal")]
         private static extern void YaPurchasesGetCatalog(Action<string> onSuccess, Action<string> onError);
+
         [DllImport("__Internal")]
-        private static extern void YaPurchasesPurchase(string id, string developerPayload, Action<string> onSuccess, Action<string> onError);
+        private static extern void YaPurchasesPurchase(string id, string developerPayload, Action<string> onSuccess,
+            Action<string> onError);
+
         [DllImport("__Internal")]
         private static extern void YaPurchasesGetPurchases(Action<string> onSuccess, Action<string> onError);
+
         [DllImport("__Internal")]
         private static extern void YaPurchasesConsume(string token, Action onSuccess, Action<string> onError);
     }

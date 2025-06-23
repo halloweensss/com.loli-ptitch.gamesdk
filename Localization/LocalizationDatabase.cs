@@ -2,12 +2,9 @@
 using System.Linq;
 using System.Threading.Tasks;
 using GameSDK.Core.PropertyAttributes;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Networking;
-
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 namespace GameSDK.Localization
 {

@@ -11,7 +11,7 @@ namespace GameSDK.Plugins.YaGames.Leaderboard
 {
     public class YaLeaderboard : ILeaderboardApp
     {
-        private static readonly YaLeaderboard _instance = new YaLeaderboard();
+        private static readonly YaLeaderboard Instance = new YaLeaderboard();
         
         private InitializationStatus _status = InitializationStatus.None;
         private LeaderboardStatus _statusResponse = LeaderboardStatus.None;
@@ -33,7 +33,7 @@ namespace GameSDK.Plugins.YaGames.Leaderboard
             [MonoPInvokeCallback(typeof(Action))]
             static void OnSuccess()
             {
-                _instance._status = InitializationStatus.Initialized;
+                Instance._status = InitializationStatus.Initialized;
 
                 if (GameApp.IsDebugMode)
                 {
@@ -44,7 +44,7 @@ namespace GameSDK.Plugins.YaGames.Leaderboard
             [MonoPInvokeCallback(typeof(Action))]
             static void OnError()
             {
-                _instance._status = InitializationStatus.Error;
+                Instance._status = InitializationStatus.Error;
                 if (GameApp.IsDebugMode)
                 {
                     Debug.Log($"[GameSDK.Leaderboard]: An error occurred while initializing the YaGamesApp!");
@@ -81,7 +81,7 @@ namespace GameSDK.Plugins.YaGames.Leaderboard
             static void OnSuccess(string data)
             {
                 var yaDescription = JsonUtility.FromJson<YaLeaderboardDescription>(data);
-                _instance._descriptionResponse = new LeaderboardDescription()
+                Instance._descriptionResponse = new LeaderboardDescription()
                 {
                     Name = yaDescription.name,
                     Title = new Title()
@@ -96,13 +96,13 @@ namespace GameSDK.Plugins.YaGames.Leaderboard
                     Debug.Log($"[GameSDK.Leaderboard]: YaGamesApp description received!");
                 }
                 
-                _instance._statusResponse = LeaderboardStatus.Success;
+                Instance._statusResponse = LeaderboardStatus.Success;
             }
 
             [MonoPInvokeCallback(typeof(Action))]
             static void OnError()
             {
-                _instance._statusResponse = LeaderboardStatus.Error;
+                Instance._statusResponse = LeaderboardStatus.Error;
                 if (GameApp.IsDebugMode)
                 {
                     Debug.Log($"[GameSDK.Leaderboard]: YaGamesApp description not received!");
@@ -134,13 +134,13 @@ namespace GameSDK.Plugins.YaGames.Leaderboard
                     Debug.Log($"[GameSDK.Leaderboard]: YaGamesApp the data is recorded in the leaderboard!");
                 }
                 
-                _instance._statusResponse = LeaderboardStatus.Success;
+                Instance._statusResponse = LeaderboardStatus.Success;
             }
 
             [MonoPInvokeCallback(typeof(Action))]
             static void OnError()
             {
-                _instance._statusResponse = LeaderboardStatus.Error;
+                Instance._statusResponse = LeaderboardStatus.Error;
                 if (GameApp.IsDebugMode)
                 {
                     Debug.Log($"[GameSDK.Leaderboard]: YaGamesApp the data is not entered in the leaderboard!");
@@ -190,21 +190,21 @@ namespace GameSDK.Plugins.YaGames.Leaderboard
                 }
 
                 var yaPlayerData = JsonUtility.FromJson<YaLeaderboardPlayerData>(data);
-                _instance._playerDataResponse = new LeaderboardPlayerData()
+                Instance._playerDataResponse = new LeaderboardPlayerData()
                 {
                     Name = yaPlayerData.player.publicName,
                     Rank = yaPlayerData.rank,
                     Score = yaPlayerData.score
                 };
                 
-                _instance._statusResponse = LeaderboardStatus.Success;
+                Instance._statusResponse = LeaderboardStatus.Success;
             }
 
             [MonoPInvokeCallback(typeof(Action))]
             static void OnError()
             {
-                _instance._playerDataResponse = null;
-                _instance._statusResponse = LeaderboardStatus.Error;
+                Instance._playerDataResponse = null;
+                Instance._statusResponse = LeaderboardStatus.Error;
                 if (GameApp.IsDebugMode)
                 {
                     Debug.Log($"[GameSDK.Leaderboard]: YaGamesApp the data is not entered in the leaderboard!");
@@ -297,15 +297,15 @@ namespace GameSDK.Plugins.YaGames.Leaderboard
                     Debug.Log($"[GameSDK.Leaderboard]: YaGamesApp the entries is recorded in the leaderboard!");
                 }
                 
-                _instance._entriesResponse = dataEntries;
-                _instance._statusResponse = LeaderboardStatus.Success;
+                Instance._entriesResponse = dataEntries;
+                Instance._statusResponse = LeaderboardStatus.Success;
             }
 
             [MonoPInvokeCallback(typeof(Action))]
             static void OnError()
             {
-                _instance._entriesResponse = null;
-                _instance._statusResponse = LeaderboardStatus.Error;
+                Instance._entriesResponse = null;
+                Instance._statusResponse = LeaderboardStatus.Error;
                 if (GameApp.IsDebugMode)
                 {
                     Debug.Log($"[GameSDK.Leaderboard]: YaGamesApp the entries is not entered in the leaderboard!");
@@ -316,7 +316,7 @@ namespace GameSDK.Plugins.YaGames.Leaderboard
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void RegisterInternal()
         {
-            GameSDK.Leaderboard.Leaderboard.Instance.Register(_instance);
+            GameSDK.Leaderboard.Leaderboard.Register(Instance);
         }
 
         [DllImport("__Internal")]

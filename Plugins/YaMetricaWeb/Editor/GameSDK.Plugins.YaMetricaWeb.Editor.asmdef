@@ -1,7 +1,10 @@
 {
     "name": "GameSDK.Plugins.YaMetricaWeb.Editor",
-    "rootNamespace": "",
-    "references": ["GUID:d78900796451133499c2c8289fe92743"],
+    "rootNamespace": "GameSDK",
+    "references": [
+        "GameSDK.Extensions",
+        "GameSDK.YaMetrica"
+    ],
     "includePlatforms": [
         "Editor"
     ],

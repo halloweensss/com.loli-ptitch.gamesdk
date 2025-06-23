@@ -1,0 +1,17 @@
+{
+    "name": "GameSDK.YaMetrica",
+    "rootNamespace": "GameSDK",
+    "references": [
+        "GameSDK.Core",
+        "GameSDK.Analytics"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

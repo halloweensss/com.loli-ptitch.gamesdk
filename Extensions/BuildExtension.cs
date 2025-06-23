@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace Extensions
+namespace GameSDK.Extensions
 {
     public static class BuildExtension
     {

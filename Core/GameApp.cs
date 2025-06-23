@@ -9,7 +9,7 @@ namespace GameSDK.Core
 {
     public class GameApp
     {
-        private static GameApp _instance;
+        private static readonly GameApp Instance = new();
 
         private GameAppRunner _runner;
         private bool _isReady = false;
@@ -19,9 +19,8 @@ namespace GameSDK.Core
 
         private bool _isVisible = true;
         private InitializationStatus _initializationStatus = InitializationStatus.None;
-        private Dictionary<PlatformServiceType, ICoreApp> _services = new Dictionary<PlatformServiceType, ICoreApp>();
-        internal static GameApp Instance => _instance ??= new GameApp();
-        internal static GameAppRunner Runner => _instance._runner;
+        private readonly Dictionary<PlatformServiceType, ICoreApp> _services = new Dictionary<PlatformServiceType, ICoreApp>();
+        public static GameAppRunner Runner => Instance._runner;
         public static DeviceType DeviceType => Instance.GetDeviceType();
         public static string Lang => Instance.GetLang();
         public static string AppId => Instance.GetAppId();
@@ -36,9 +35,15 @@ namespace GameSDK.Core
         public static event Action<bool> OnStartChanged;
         public static event Action<bool> OnVisibilityChanged;
         
-        internal void Register(ICoreApp app)
+        public static void Register(ICoreApp app) => Instance.RegisterInternal(app);
+        
+        public static void RegisterRunner(GameAppRunner runner) => Instance.RegisterRunnerInternal(runner);
+        
+        public static void OnVisibilityChange(bool isVisible) => Instance.OnVisibilityChangeInternal(isVisible);
+        
+        private void RegisterInternal(ICoreApp app)
         {
-            if (_services.ContainsKey(app.PlatformService))
+            if (_services.TryAdd(app.PlatformService, app) == false)
             {
                 if (IsDebugMode)
                 {
@@ -48,15 +53,13 @@ namespace GameSDK.Core
                 return;
             }
 
-            _services.Add(app.PlatformService, app);
-
             if (IsDebugMode)
             {
                 Debug.Log($"[GameSDK]: Platform {app.PlatformService} is registered!");
             }
         }
         
-        internal void RegisterRunner(GameAppRunner runner)
+        private void RegisterRunnerInternal(GameAppRunner runner)
         {
             _runner = runner;
 
@@ -66,7 +69,7 @@ namespace GameSDK.Core
             }
         }
 
-        internal async void OnVisibilityChange(bool isVisible)
+        private async void OnVisibilityChangeInternal(bool isVisible)
         {
             _isVisible = isVisible;
 
@@ -146,9 +149,9 @@ namespace GameSDK.Core
                 return;
             }
             
-            _instance._initializationStatus = InitializationStatus.Waiting;
+            Instance._initializationStatus = InitializationStatus.Waiting;
 
-            foreach (var service in _instance._services)
+            foreach (var service in Instance._services)
             {
                 try
                 {
@@ -156,7 +159,7 @@ namespace GameSDK.Core
                     
                     if (service.Value.InitializationStatus == InitializationStatus.Initialized) continue;
                     
-                    _instance._initializationStatus = service.Value.InitializationStatus;
+                    Instance._initializationStatus = service.Value.InitializationStatus;
                     return;
                 }
                 catch (Exception e)
@@ -166,13 +169,13 @@ namespace GameSDK.Core
                         Debug.LogError($"[GameSDK]: An initialize SDK error has occurred {e.Message}!");
                     }
                     
-                    _instance._initializationStatus = InitializationStatus.Error;
+                    Instance._initializationStatus = InitializationStatus.Error;
                     OnInitializeError?.Invoke();
                     return;
                 }
             }
 
-            _instance._initializationStatus = InitializationStatus.Initialized;
+            Instance._initializationStatus = InitializationStatus.Initialized;
             OnInitialized?.Invoke();
         }
         
@@ -205,7 +208,7 @@ namespace GameSDK.Core
                 return;
             }
 
-            foreach (var service in _instance._services)
+            foreach (var service in Instance._services)
             {
                 try
                 {
@@ -213,7 +216,7 @@ namespace GameSDK.Core
                     
                     if (service.Value.IsReady) continue;
                     
-                    _instance._isReady = false;
+                    Instance._isReady = false;
                     return;
                 }
                 catch (Exception e)
@@ -227,7 +230,7 @@ namespace GameSDK.Core
                 }
             }
 
-            _instance._isReady = true;
+            Instance._isReady = true;
             
             if (IsDebugMode)
             {
@@ -237,27 +240,27 @@ namespace GameSDK.Core
 
         public static async Task Start()
         {
-            _instance._manuallyStarted = true;
+            Instance._manuallyStarted = true;
             await GameStart();
         }
         
         public static async Task Stop()
         {
             await GameStop();
-            _instance._manuallyStarted = false;
+            Instance._manuallyStarted = false;
         }
         
-        internal static async Task GameStart()
+        public static async Task GameStart()
         {
-            if(_instance._manuallyStarted == false)
+            if(Instance._manuallyStarted == false)
                 return;
             
-            if(_instance._startedCounter > 1)
+            if(Instance._startedCounter > 1)
             {
-                _instance._startedCounter--;
+                Instance._startedCounter--;
             }
             
-            if(_instance._startedCounter > 1)
+            if(Instance._startedCounter > 1)
                 return;
             
             if (IsStarted)
@@ -287,7 +290,7 @@ namespace GameSDK.Core
                 return;
             }
 
-            foreach (var service in _instance._services)
+            foreach (var service in Instance._services)
             {
                 try
                 {
@@ -304,8 +307,8 @@ namespace GameSDK.Core
                 }
             }
 
-            _instance._isStarted = true;
-            _instance._startedCounter = 1;
+            Instance._isStarted = true;
+            Instance._startedCounter = 1;
             
             if (IsDebugMode)
             {
@@ -315,9 +318,9 @@ namespace GameSDK.Core
             OnStartChanged?.Invoke(IsStarted);
         }
         
-        internal static async Task GameStop()
+        public static async Task GameStop()
         {
-            if(_instance._manuallyStarted == false)
+            if(Instance._manuallyStarted == false)
                 return;
             
             if (IsStarted == false)
@@ -328,9 +331,9 @@ namespace GameSDK.Core
                         $"[GameSDK]: SDK has already been stopped!");
                 }
 
-                if (_instance._startedCounter >= 1)
+                if (Instance._startedCounter >= 1)
                 {
-                    _instance._startedCounter++;
+                    Instance._startedCounter++;
                 }
 
                 return;
@@ -352,7 +355,7 @@ namespace GameSDK.Core
                 return;
             }
 
-            foreach (var service in _instance._services)
+            foreach (var service in Instance._services)
             {
                 try
                 {
@@ -369,8 +372,8 @@ namespace GameSDK.Core
                 }
             }
 
-            _instance._isStarted = false;
-            _instance._startedCounter++;
+            Instance._isStarted = false;
+            Instance._startedCounter++;
             
             if (IsDebugMode)
             {

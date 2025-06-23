@@ -10,13 +10,12 @@ namespace GameSDK.Purchases
 {
     public class Purchases
     {
-        private static Purchases _instance;
+        private static readonly Purchases Instance = new();
         
         private InitializationStatus _initializationStatus = InitializationStatus.None;
 
         private Dictionary<PlatformServiceType, IPurchasesApp> _services = new Dictionary<PlatformServiceType, IPurchasesApp>();
         public Dictionary<string, ProductType> _productTypes = new Dictionary<string, ProductType>();
-        internal static Purchases Instance => _instance ??= new Purchases();
         
         public static bool IsInitialized => Instance._initializationStatus == InitializationStatus.Initialized;
         
@@ -25,9 +24,11 @@ namespace GameSDK.Purchases
         public static event Action<ProductPurchase> OnPurchased;
         public static event Action<ProductPurchase> OnConsumed;
         
-        internal void Register(IPurchasesApp app)
+        public static void Register(IPurchasesApp app) => Instance.RegisterInternal(app);
+        
+        private void RegisterInternal(IPurchasesApp app)
         {
-            if (_services.ContainsKey(app.PlatformService))
+            if (_services.TryAdd(app.PlatformService, app) == false)
             {
                 if (GameApp.IsDebugMode)
                 {
@@ -36,8 +37,6 @@ namespace GameSDK.Purchases
 
                 return;
             }
-
-            _services.Add(app.PlatformService, app);
 
             if (GameApp.IsDebugMode)
             {
@@ -73,16 +72,16 @@ namespace GameSDK.Purchases
                 return;
             }
             
-            _instance._initializationStatus = InitializationStatus.Waiting;
+            Instance._initializationStatus = InitializationStatus.Waiting;
 
-            foreach (var service in _instance._services)
+            foreach (var service in Instance._services)
             {
                 try
                 {
                     await service.Value.Initialize();
                     if (service.Value.InitializationStatus == InitializationStatus.Initialized) continue;
                     
-                    _instance._initializationStatus = service.Value.InitializationStatus;
+                    Instance._initializationStatus = service.Value.InitializationStatus;
                     return;
                 }
                 catch (Exception e)
@@ -92,13 +91,13 @@ namespace GameSDK.Purchases
                         Debug.LogError($"[GameSDK.Purchases]: An initialize SDK error has occurred {e.Message}!");
                     }
                     
-                    _instance._initializationStatus = InitializationStatus.Error;
+                    Instance._initializationStatus = InitializationStatus.Error;
                     OnInitializeError?.Invoke();
                     return;
                 }
             }
 
-            _instance._initializationStatus = InitializationStatus.Initialized;
+            Instance._initializationStatus = InitializationStatus.Initialized;
             OnInitialized?.Invoke();
         }
 
@@ -123,7 +122,7 @@ namespace GameSDK.Purchases
             List<Product> products = new List<Product>();
             var purchasedProducts = (await GetPurchases()).GroupBy(el => el.Id).ToDictionary(el => el.Key, el => el.ToList());
 
-            foreach (var service in _instance._services)
+            foreach (var service in Instance._services)
             {
                 try
                 {
@@ -135,10 +134,10 @@ namespace GameSDK.Purchases
                     {
                         if (products.Exists(el => el.Id == product.Id)) continue;
 
-                        product.InitializePurchases(_instance);
+                        product.InitializePurchases(Instance);
                         
                         product.Type = ProductType.None;
-                        if (_instance._productTypes.TryGetValue(product.Id, out var typeProduct))
+                        if (Instance._productTypes.TryGetValue(product.Id, out var typeProduct))
                         {
                             product.Type = typeProduct;
                         }
@@ -168,7 +167,7 @@ namespace GameSDK.Purchases
 
         public static void AddProduct(string id, ProductType productType)
         {
-            if (_instance._productTypes.ContainsKey(id))
+            if (Instance._productTypes.ContainsKey(id))
             {
                 if (GameApp.IsDebugMode)
                 {
@@ -179,12 +178,12 @@ namespace GameSDK.Purchases
                 return;
             }
             
-            _instance._productTypes.Add(id, productType);
+            Instance._productTypes.Add(id, productType);
         }
         
         public static void RemoveProduct(string id)
         {
-            if (_instance._productTypes.ContainsKey(id) == false)
+            if (Instance._productTypes.ContainsKey(id) == false)
             {
                 if (GameApp.IsDebugMode)
                 {
@@ -195,7 +194,7 @@ namespace GameSDK.Purchases
                 return;
             }
             
-            _instance._productTypes.Remove(id);
+            Instance._productTypes.Remove(id);
         }
         
         public static async Task<(bool, ProductPurchase)> Purchase(string id, string developerPayload = "")
@@ -229,7 +228,7 @@ namespace GameSDK.Purchases
                 return (false, null);
             }
 
-            foreach (var service in _instance._services)
+            foreach (var service in Instance._services)
             {
                 try
                 {
@@ -237,11 +236,11 @@ namespace GameSDK.Purchases
                     
                     if(result.Item1 == false) continue;
 
-                    result.Item2.InitializePurchase(_instance);
+                    result.Item2.InitializePurchase(Instance);
 
                     result.Item2.Type = ProductType.None;
                     
-                    if (_instance._productTypes.TryGetValue(result.Item2.Id, out var value))
+                    if (Instance._productTypes.TryGetValue(result.Item2.Id, out var value))
                     {
                         result.Item2.Type = value;
                     }
@@ -283,7 +282,7 @@ namespace GameSDK.Purchases
                 return false;
             }
 
-            foreach (var service in _instance._services)
+            foreach (var service in Instance._services)
             {
                 try
                 {
@@ -330,7 +329,7 @@ namespace GameSDK.Purchases
                 return Array.Empty<ProductPurchase>();
             }
 
-            foreach (var service in _instance._services)
+            foreach (var service in Instance._services)
             {
                 try
                 {
@@ -340,10 +339,10 @@ namespace GameSDK.Purchases
 
                     foreach (var purchase in result)
                     {
-                        purchase.InitializePurchase(_instance);
+                        purchase.InitializePurchase(Instance);
                         purchase.Type = ProductType.None;
                         
-                        if (_instance._productTypes.TryGetValue(purchase.Id, out var value))
+                        if (Instance._productTypes.TryGetValue(purchase.Id, out var value))
                         {
                             purchase.Type = value;
                         }

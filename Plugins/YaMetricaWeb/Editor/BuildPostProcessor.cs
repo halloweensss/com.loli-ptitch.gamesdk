@@ -1,13 +1,12 @@
 using System.IO;
 using System.Text;
-using Extensions;
-using GameSDK.Plugins.YaMetricaWeb;
+using GameSDK.Extensions;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 using UnityEngine;
 
-namespace Plugins.YaMetricaWeb.Editor
+namespace GameSDK.Plugins.YaMetricaWeb.Editor
 {
     public class BuildPostProcessor : IPostprocessBuildWithReport
     {

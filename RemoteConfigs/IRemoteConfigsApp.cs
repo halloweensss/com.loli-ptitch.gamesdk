@@ -4,7 +4,7 @@ using GameSDK.Core;
 
 namespace GameSDK.RemoteConfigs
 {
-    internal interface IRemoteConfigsApp : IGameSDKService
+    public interface IRemoteConfigsApp : IGameSDKService
     {
         IReadOnlyDictionary<string, RemoteConfigValue> RemoteValues { get; }
         Task Initialize();

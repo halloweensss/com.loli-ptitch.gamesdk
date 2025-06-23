@@ -8,7 +8,7 @@ namespace GameSDK.Plugins.Web.Visibility
 {
     internal sealed class WebVisibility
     {
-        private static readonly WebVisibility _instance = new();
+        private static readonly WebVisibility Instance = new();
         
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void RegisterInternal()
@@ -21,7 +21,7 @@ namespace GameSDK.Plugins.Web.Visibility
         }
 
         [MonoPInvokeCallback(typeof(Action<bool>))]
-        private static void OnVisibilityChanged(bool isVisible) => GameApp.Instance.OnVisibilityChange(isVisible);
+        private static void OnVisibilityChanged(bool isVisible) => GameApp.OnVisibilityChange(isVisible);
 
         [DllImport("__Internal")]
         private static extern void GameAppVisibilityHandler(Action<bool> onVisibilityChanged);

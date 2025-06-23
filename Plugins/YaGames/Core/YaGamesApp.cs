@@ -11,7 +11,7 @@ namespace GameSDK.Plugins.YaGames.Core
 {
     internal sealed class YaGamesApp : ICoreApp
     {
-        private static readonly YaGamesApp _instance = new YaGamesApp();
+        private static readonly YaGamesApp Instance = new YaGamesApp();
 
         private InitializationStatus _status = InitializationStatus.None;
         private DeviceType _device = DeviceType.Undefined;
@@ -48,7 +48,7 @@ namespace GameSDK.Plugins.YaGames.Core
                 return;
             }
 
-            await _instance.InitializeInternal();
+            await Instance.InitializeInternal();
         }
 
         public async Task Ready()
@@ -56,17 +56,17 @@ namespace GameSDK.Plugins.YaGames.Core
             if (_ready)
                 return;
 
-            await _instance.GameReadyInternal();
+            await Instance.GameReadyInternal();
         }
 
         public async Task Start()
         {
-            await _instance.GameStartInternal();
+            await Instance.GameStartInternal();
         }
 
         public async Task Stop()
         {
-            await _instance.GameStopInternal();
+            await Instance.GameStopInternal();
         }
 
         private async Task InitializeInternal()
@@ -86,10 +86,10 @@ namespace GameSDK.Plugins.YaGames.Core
             [MonoPInvokeCallback(typeof(Action))]
             static void OnSuccess()
             {
-                _instance._status = InitializationStatus.Initialized;
+                Instance._status = InitializationStatus.Initialized;
                 
-                _instance.InitializeDeviceType();
-                _instance.InitializeEnvironment();
+                Instance.InitializeDeviceType();
+                Instance.InitializeEnvironment();
                 
                 if (GameApp.IsDebugMode)
                 {
@@ -100,7 +100,7 @@ namespace GameSDK.Plugins.YaGames.Core
             [MonoPInvokeCallback(typeof(Action))]
             static void OnError()
             {
-                _instance._status = InitializationStatus.Error;
+                Instance._status = InitializationStatus.Error;
                 if (GameApp.IsDebugMode)
                 {
                     Debug.Log($"[GameSDK]: An error occurred while initializing the YaGamesApp!");
@@ -120,7 +120,7 @@ namespace GameSDK.Plugins.YaGames.Core
             [MonoPInvokeCallback(typeof(Action))]
             static void OnSuccess()
             {
-                _instance._ready = true;
+                Instance._ready = true;
                 
                 if (GameApp.IsDebugMode)
                 {
@@ -131,7 +131,7 @@ namespace GameSDK.Plugins.YaGames.Core
             [MonoPInvokeCallback(typeof(Action))]
             static void OnError()
             {
-                _instance._ready = false;
+                Instance._ready = false;
                 
                 if (GameApp.IsDebugMode)
                 {
@@ -152,7 +152,7 @@ namespace GameSDK.Plugins.YaGames.Core
             [MonoPInvokeCallback(typeof(Action))]
             static void OnSuccess()
             {
-                _instance._started = true;
+                Instance._started = true;
                 
                 if (GameApp.IsDebugMode)
                 {
@@ -182,7 +182,7 @@ namespace GameSDK.Plugins.YaGames.Core
             [MonoPInvokeCallback(typeof(Action))]
             static void OnSuccess()
             {
-                _instance._started = false;
+                Instance._started = false;
                 
                 if (GameApp.IsDebugMode)
                 {
@@ -241,7 +241,7 @@ namespace GameSDK.Plugins.YaGames.Core
 #if !UNITY_EDITOR
             _instance._environment = JsonUtility.FromJson<YaEnvironment>(YaGamesGetEnvironment());
 #else
-            _instance._environment = new YaEnvironment
+            Instance._environment = new YaEnvironment
             {
                 app = new YaApp()
                 {
@@ -263,7 +263,7 @@ namespace GameSDK.Plugins.YaGames.Core
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void RegisterInternal()
         {
-            GameApp.Instance.Register(_instance);
+            GameApp.Register(Instance);
         }
 
         [DllImport("__Internal")]

@@ -10,7 +10,7 @@ namespace GameSDK.Analytics
 {
     public sealed class Analytics
     {
-        private static Analytics _instance;
+        private static readonly Analytics Instance = new();
         private readonly LinkedList<EventData> _cachedEvents = new();
         private readonly ObjectPool<EventData> _eventDataPool;
         private readonly Dictionary<AnalyticsProviderType, IAnalyticsApp> _services = new();
@@ -23,13 +23,12 @@ namespace GameSDK.Analytics
             _eventDataPool = new ObjectPool<EventData>(EventData.Create, EventData.Clear, defaultCapacity: 32);
         }
 
-        public static Analytics Instance => _instance ??= new Analytics();
         public static bool IsInitialized => Instance._initializationStatus == InitializationStatus.Initialized;
 
         public static event Action OnInitialized;
         public static event Action OnInitializeError;
 
-        internal static void Register(IAnalyticsApp app)
+        public static void Register(IAnalyticsApp app)
         {
             Instance.RegisterInternal(app);
         }
@@ -41,13 +40,13 @@ namespace GameSDK.Analytics
                 if (GameApp.IsDebugMode)
                     Debug.LogWarning(
                         $"[GameSDK.Analytics]: The platform {app.ProviderType} has already been registered!");
-                
+
                 return;
             }
 
             if (GameApp.IsDebugMode)
                 Debug.Log($"[GameSDK.Analytics]: Platform {app.ProviderType} is registered!");
-            
+
             _registeredProviders |= app.ProviderType;
         }
 
@@ -78,7 +77,7 @@ namespace GameSDK.Analytics
             }
 
             _initializationStatus = InitializationStatus.Waiting;
-            
+
             foreach (var service in _services)
                 try
                 {
@@ -100,10 +99,10 @@ namespace GameSDK.Analytics
                 }
 
             _initializationStatus = InitializationStatus.Initialized;
-            
+
             if (GameApp.IsDebugMode)
-                Debug.Log($"[GameSDK.Analytics]: SDK has been initialized!");
-            
+                Debug.Log("[GameSDK.Analytics]: SDK has been initialized!");
+
             OnInitialized?.Invoke();
         }
 
@@ -124,10 +123,10 @@ namespace GameSDK.Analytics
             AnalyticsProviderType provider = AnalyticsProviderType.Default)
         {
             var node = CreateElement(key, parameters, provider);
-            
+
             if (_consentInfo.IsConsentGranted == false)
                 return false;
-            
+
             return await SendEventInternal(node);
         }
 
@@ -136,15 +135,15 @@ namespace GameSDK.Analytics
         {
             var eventData = _eventDataPool.Get();
 
-            if (provider == AnalyticsProviderType.Default) 
+            if (provider == AnalyticsProviderType.Default)
                 provider = _registeredProviders;
-            
+
             eventData.Initialize(key, parameters, provider);
             var node = _cachedEvents.AddLast(eventData);
-            
+
             if (GameApp.IsDebugMode)
                 Debug.Log($"[GameSDK.Analytics]: Event {key} has been created!");
-            
+
             return node;
         }
 
@@ -163,7 +162,7 @@ namespace GameSDK.Analytics
 
                 return false;
             }
-            
+
             var eventData = node.Value;
 
             var dispatchedProviders = AnalyticsProviderType.None;
@@ -178,7 +177,7 @@ namespace GameSDK.Analytics
                     continue;
 
                 var sendResult = false;
-                
+
                 var parameters = eventData.Parameters;
 
                 if (parameters != null && parameters.Count > 0)
@@ -191,7 +190,7 @@ namespace GameSDK.Analytics
                     if (GameApp.IsDebugMode)
                         Debug.LogWarning(
                             $"[GameSDK.Analytics]: Event {eventData.Id} has not been sent to {providerType} provider!");
-                    
+
                     continue;
                 }
 
@@ -206,7 +205,8 @@ namespace GameSDK.Analytics
                 ClearElement(node);
 
                 if (GameApp.IsDebugMode)
-                    Debug.Log($"[GameSDK.Analytics]: Event {eventData.Id} has been sent successfully to {dispatchedProviders}!");
+                    Debug.Log(
+                        $"[GameSDK.Analytics]: Event {eventData.Id} has been sent successfully to {dispatchedProviders}!");
             }
             else
             {

@@ -3,7 +3,7 @@ using GameSDK.Core;
 
 namespace GameSDK.Purchases
 {
-    internal interface IPurchasesApp : IGameSDKService
+    public interface IPurchasesApp : IGameSDKService
     {
         Task Initialize();
         Task<(bool, Product[])> GetCatalog();

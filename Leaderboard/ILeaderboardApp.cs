@@ -3,7 +3,7 @@ using GameSDK.Core;
 
 namespace GameSDK.Leaderboard
 {
-    internal interface ILeaderboardApp : IGameSDKService
+    public interface ILeaderboardApp : IGameSDKService
     {
         Task Initialize();
         Task<LeaderboardDescription> GetDescription(string id);

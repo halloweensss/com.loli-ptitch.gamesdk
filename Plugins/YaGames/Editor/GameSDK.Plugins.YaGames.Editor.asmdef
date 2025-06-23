@@ -1,7 +1,9 @@
 {
-    "name": "GameSDK.Plugins.YaGames.Editor",
+    "name": "GameSDK.YaGames.Editor",
     "rootNamespace": "",
-    "references": ["GUID:d78900796451133499c2c8289fe92743"],
+    "references": [
+        "GameSDK.Extensions"
+    ],
     "includePlatforms": [
         "Editor"
     ],

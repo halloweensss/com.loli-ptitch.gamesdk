@@ -7,11 +7,11 @@ using GameSDK.Core.Properties;
 using GameSDK.Time;
 using UnityEngine;
 
-namespace Plugins.YaGames.Time
+namespace GameSDK.Plugins.YaGames.Time
 {
     public class YaTime : ITimeApp
     {
-        private static readonly YaTime _instance = new();
+        private static readonly YaTime Instance = new();
         public PlatformServiceType PlatformService => PlatformServiceType.YaGames;
         public InitializationStatus InitializationStatus => InitializationStatus.Initialized;
         
@@ -36,15 +36,15 @@ namespace Plugins.YaGames.Time
             [MonoPInvokeCallback(typeof(Action))]
             static void Callback(string result)
             {
-                _instance._lastTimestamp = long.Parse(result);
-                _instance._processing = false;
+                Instance._lastTimestamp = long.Parse(result);
+                Instance._processing = false;
             }
         }
         
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void RegisterInternal()
         {
-            GameSDK.Time.Time.Instance.Register(_instance);
+            GameSDK.Time.Time.Register(Instance);
         }
         
         [DllImport("__Internal")]

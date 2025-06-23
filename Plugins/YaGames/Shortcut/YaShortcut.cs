@@ -11,7 +11,7 @@ namespace GameSDK.Plugins.YaGames.Shortcut
 {
     public class YaShortcut : IShortcutApp
     {
-        private static readonly YaShortcut _instance = new YaShortcut();
+        private static readonly YaShortcut Instance = new YaShortcut();
         
         private ShortcutStatus _status;
         public PlatformServiceType PlatformService => PlatformServiceType.YaGames;
@@ -35,7 +35,7 @@ namespace GameSDK.Plugins.YaGames.Shortcut
             [MonoPInvokeCallback(typeof(Action))]
             static void OnSuccess()
             {
-                _instance._status = ShortcutStatus.Success;
+                Instance._status = ShortcutStatus.Success;
 
                 if (GameApp.IsDebugMode)
                 {
@@ -46,7 +46,7 @@ namespace GameSDK.Plugins.YaGames.Shortcut
             [MonoPInvokeCallback(typeof(Action<string>))]
             static void OnError(string reason)
             {
-                _instance._status = ShortcutStatus.Error;
+                Instance._status = ShortcutStatus.Error;
 
                 if (GameApp.IsDebugMode)
                 {
@@ -74,7 +74,7 @@ namespace GameSDK.Plugins.YaGames.Shortcut
             [MonoPInvokeCallback(typeof(Action))]
             static void OnSuccess()
             {
-                _instance._status = ShortcutStatus.Success;
+                Instance._status = ShortcutStatus.Success;
 
                 if (GameApp.IsDebugMode)
                 {
@@ -85,7 +85,7 @@ namespace GameSDK.Plugins.YaGames.Shortcut
             [MonoPInvokeCallback(typeof(Action<string>))]
             static void OnError(string reason)
             {
-                _instance._status = ShortcutStatus.Error;
+                Instance._status = ShortcutStatus.Error;
 
                 if (GameApp.IsDebugMode)
                 {
@@ -97,7 +97,7 @@ namespace GameSDK.Plugins.YaGames.Shortcut
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void RegisterInternal()
         {
-            GameSDK.Shortcut.Shortcut.Instance.Register(_instance);
+            GameSDK.Shortcut.Shortcut.Register(Instance);
         }
         
         [DllImport("__Internal")]

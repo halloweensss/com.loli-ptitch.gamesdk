@@ -4,7 +4,7 @@ using GameSDK.Core;
 
 namespace GameSDK.Analytics
 {
-    internal interface IAnalyticsApp : IGameSDKService
+    public interface IAnalyticsApp : IGameSDKService
     {
         AnalyticsProviderType ProviderType { get; }
         Task Initialize();
