@@ -11,7 +11,7 @@ namespace GameSDK.Advertisement
         public event Action OnHidden;
         public event Action OnError;
         
-        private readonly Dictionary<PlatformServiceType, IBannerAds> _services = new(2);
+        private readonly Dictionary<string, IBannerAds> _services = new(2);
         
         internal Banner()
         {
@@ -20,11 +20,11 @@ namespace GameSDK.Advertisement
         
         public void Register(IBannerAds service)
         {
-            if (_services.TryAdd(service.PlatformService, service) == false)
+            if (_services.TryAdd(service.ServiceId, service) == false)
             {
                 if (GameApp.IsDebugMode)
                     Debug.LogWarning(
-                        $"[GameSDK.Advertisement.Banner]: The platform {service.PlatformService} has already been registered!");
+                        $"[GameSDK.Advertisement.Banner]: The platform {service.ServiceId} has already been registered!");
 
                 return;
             }
@@ -34,16 +34,16 @@ namespace GameSDK.Advertisement
             service.OnErrorBanner += OnErrorHandler;
 
             if (GameApp.IsDebugMode)
-                Debug.Log($"[GameSDK.Advertisement.Banner]: Platform {service.PlatformService} is registered!");
+                Debug.Log($"[GameSDK.Advertisement.Banner]: Platform {service.ServiceId} is registered!");
         }
         
         public void Unregister(IBannerAds service)
         {
-            if (_services.Remove(service.PlatformService) == false)
+            if (_services.Remove(service.ServiceId) == false)
             {
                 if (GameApp.IsDebugMode)
                     Debug.LogWarning(
-                        $"[GameSDK.Advertisement.Banner]: The platform {service.PlatformService} has not been registered!");
+                        $"[GameSDK.Advertisement.Banner]: The platform {service.ServiceId} has not been registered!");
 
                 return;
             }
@@ -53,7 +53,7 @@ namespace GameSDK.Advertisement
             service.OnErrorBanner -= OnErrorHandler;
 
             if (GameApp.IsDebugMode)
-                Debug.Log($"[GameSDK.Advertisement.Banner]: Platform {service.PlatformService} is unregistered!");
+                Debug.Log($"[GameSDK.Advertisement.Banner]: Platform {service.ServiceId} is unregistered!");
         }
         
         public async void Show()

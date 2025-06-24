@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using AOT;
 using GameSDK.Core;
-using GameSDK.Core.Properties;
+using GameSDK.Plugins.YaGames.Core;
 using GameSDK.Time;
 using UnityEngine;
 
@@ -12,7 +12,7 @@ namespace GameSDK.Plugins.YaGames.Time
     public class YaTime : ITimeApp
     {
         private static readonly YaTime Instance = new();
-        public PlatformServiceType PlatformService => PlatformServiceType.YaGames;
+        public string ServiceId => Service.YaGames;
         public InitializationStatus InitializationStatus => InitializationStatus.Initialized;
         
         private bool _processing = false;

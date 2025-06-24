@@ -3,16 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using GameSDK.Core;
-using GameSDK.Core.Properties;
 using UnityEngine;
 
 namespace GameSDK.Authentication
 {
-    public class Auth
+    public class Auth : IGameService
     {
         private static readonly Auth Instance = new();
 
-        private readonly Dictionary<PlatformServiceType, IAuthApp> _services = new(2);
+        private readonly Dictionary<string, IAuthApp> _services = new(2);
         private InitializationStatus _initializationStatus = InitializationStatus.None;
         private SignInType _signInType = SignInType.None;
 
@@ -23,6 +22,8 @@ namespace GameSDK.Authentication
         public static string Id => Instance.GetId();
         public static string Name => Instance.GetName();
         public static PayingStatusType PayingStatus => Instance.GetPayingStatus();
+
+        public string ServiceName => "Authentication";
 
         public static event Action OnInitialized;
         public static event Action<SignInType> OnSignIn;
@@ -35,17 +36,17 @@ namespace GameSDK.Authentication
 
         private void RegisterInternal(IAuthApp app)
         {
-            if (_services.TryAdd(app.PlatformService, app) == false)
+            if (_services.TryAdd(app.ServiceId, app) == false)
             {
                 if (GameApp.IsDebugMode)
                     Debug.LogWarning(
-                        $"[GameSDK.Authentication]: The platform {app.PlatformService} has already been registered!");
+                        $"[GameSDK.Authentication]: The platform {app.ServiceId} has already been registered!");
 
                 return;
             }
 
             if (GameApp.IsDebugMode)
-                Debug.Log($"[GameSDK.Authentication]: Platform {app.PlatformService} is registered!");
+                Debug.Log($"[GameSDK.Authentication]: Platform {app.ServiceId} is registered!");
         }
 
         private string GetId()

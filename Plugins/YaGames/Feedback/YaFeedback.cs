@@ -4,8 +4,8 @@ using System.Threading.Tasks;
 using AOT;
 using GameSDK.Authentication;
 using GameSDK.Core;
-using GameSDK.Core.Properties;
 using GameSDK.GameFeedback;
+using GameSDK.Plugins.YaGames.Core;
 using UnityEngine;
 
 namespace GameSDK.Plugins.YaGames.Feedback
@@ -18,7 +18,7 @@ namespace GameSDK.Plugins.YaGames.Feedback
         private bool _result;
         private ReviewStatus _status;
         public static ReviewStatus ReviewStatus => Instance._status;
-        public PlatformServiceType PlatformService => PlatformServiceType.YaGames;
+        public string ServiceId => Service.YaGames;
         public InitializationStatus InitializationStatus => InitializationStatus.Initialized;
 
         public async Task<(bool, FailReviewReason)> CanReview()

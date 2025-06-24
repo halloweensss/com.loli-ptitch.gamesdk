@@ -7,11 +7,13 @@ using UnityEngine;
 
 namespace GameSDK.GameStorage
 {
-    public class Storage
+    public class Storage : IGameService
     {
-        private static readonly Storage Instance = new ();
+        private static readonly Storage Instance = new();
 
-        private readonly Dictionary<PlatformServiceType, IStorageApp> _services = new(2);
+        private readonly Dictionary<string, IStorageApp> _services = new(2);
+
+        public string ServiceName => "Storage";
         public static event Action<string> OnSaved;
         public static event Action<string> OnFailSaving;
         public static event Action<string, string> OnLoaded;
@@ -24,17 +26,17 @@ namespace GameSDK.GameStorage
 
         private void RegisterInternal(IStorageApp app)
         {
-            if (_services.TryAdd(app.PlatformService, app) == false)
+            if (_services.TryAdd(app.ServiceId, app) == false)
             {
                 if (GameApp.IsDebugMode)
                     Debug.LogWarning(
-                        $"[GameSDK.Storage]: The platform {app.PlatformService} has already been registered!");
+                        $"[GameSDK.Storage]: The platform {app.ServiceId} has already been registered!");
 
                 return;
             }
 
             if (GameApp.IsDebugMode)
-                Debug.Log($"[GameSDK.Storage]: Platform {app.PlatformService} is registered!");
+                Debug.Log($"[GameSDK.Storage]: Platform {app.ServiceId} is registered!");
         }
 
         public static async Task<StorageStatus> Save(string key, string value)

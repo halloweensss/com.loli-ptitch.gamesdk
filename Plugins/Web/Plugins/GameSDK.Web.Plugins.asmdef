@@ -1,14 +1,8 @@
 {
-    "name": "GameSDK.YaGames.Feedback",
+    "name": "GameSDK.Web.Plugins",
     "rootNamespace": "GameSDK",
-    "references": [
-        "GameSDK.Feedback",
-        "GameSDK.Authentication",
-        "GameSDK.Core",
-        "GameSDK.YaGames.Core"
-    ],
+    "references": [],
     "includePlatforms": [
-        "Editor",
         "WebGL"
     ],
     "excludePlatforms": [],
@@ -16,10 +10,7 @@
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,
-    "defineConstraints": [
-        "FEEDBACK_YANDEX",
-        "CORE_YANDEX"
-    ],
+    "defineConstraints": [],
     "versionDefines": [],
     "noEngineReferences": false
 }

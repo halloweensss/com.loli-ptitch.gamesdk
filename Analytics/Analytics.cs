@@ -2,13 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using GameSDK.Core;
-using GameSDK.Core.Properties;
 using UnityEngine;
 using UnityEngine.Pool;
 
 namespace GameSDK.Analytics
 {
-    public sealed class Analytics
+    public sealed class Analytics : IGameService
     {
         private static readonly Analytics Instance = new();
         private readonly LinkedList<EventData> _cachedEvents = new();
@@ -24,6 +23,8 @@ namespace GameSDK.Analytics
         }
 
         public static bool IsInitialized => Instance._initializationStatus == InitializationStatus.Initialized;
+
+        public string ServiceName => "Analytics";
 
         public static event Action OnInitialized;
         public static event Action OnInitializeError;

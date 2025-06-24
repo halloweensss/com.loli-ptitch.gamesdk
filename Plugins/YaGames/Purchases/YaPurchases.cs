@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using AOT;
 using GameSDK.Core;
-using GameSDK.Core.Properties;
+using GameSDK.Plugins.YaGames.Core;
 using GameSDK.Purchases;
 using UnityEngine;
 
@@ -18,7 +18,7 @@ namespace GameSDK.Plugins.YaGames.Purchases
         private Product[] _productsReceived;
 
         private PurchaseStatus _statusResponse = PurchaseStatus.None;
-        public PlatformServiceType PlatformService => PlatformServiceType.YaGames;
+        public string ServiceId => Service.YaGames;
         public InitializationStatus InitializationStatus { get; private set; } = InitializationStatus.None;
 
         public async Task Initialize()

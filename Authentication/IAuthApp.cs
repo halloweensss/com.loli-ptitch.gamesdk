@@ -3,7 +3,7 @@ using GameSDK.Core;
 
 namespace GameSDK.Authentication
 {
-    public interface IAuthApp : IGameSDKService
+    public interface IAuthApp : IServiceProvider
     {
         string Id { get; }
         string Name { get; }

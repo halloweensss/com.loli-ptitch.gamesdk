@@ -3,8 +3,8 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using AOT;
 using GameSDK.Core;
-using GameSDK.Core.Properties;
 using GameSDK.Leaderboard;
+using GameSDK.Plugins.YaGames.Core;
 using UnityEngine;
 
 namespace GameSDK.Plugins.YaGames.Leaderboard
@@ -18,7 +18,7 @@ namespace GameSDK.Plugins.YaGames.Leaderboard
         private LeaderboardDescription _descriptionResponse = new LeaderboardDescription();
         private LeaderboardPlayerData _playerDataResponse = new LeaderboardPlayerData();
         private LeaderboardEntries _entriesResponse = new LeaderboardEntries();
-        public PlatformServiceType PlatformService => PlatformServiceType.YaGames;
+        public string ServiceId => Service.YaGames;
         public InitializationStatus InitializationStatus => _status;
         public async Task Initialize()
         {

@@ -1,11 +1,9 @@
 {
-    "name": "GameSDK.YaGames.Feedback",
+    "name": "GameSDK.YaMetrica.Editor",
     "rootNamespace": "GameSDK",
     "references": [
-        "GameSDK.Feedback",
-        "GameSDK.Authentication",
-        "GameSDK.Core",
-        "GameSDK.YaGames.Core"
+        "GameSDK.Extensions",
+        "GameSDK.YaMetrica"
     ],
     "includePlatforms": [
         "Editor",
@@ -17,8 +15,7 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [
-        "FEEDBACK_YANDEX",
-        "CORE_YANDEX"
+        "WEB_YANDEX_METRICA"
     ],
     "versionDefines": [],
     "noEngineReferences": false

@@ -3,7 +3,7 @@ using GameSDK.Core;
 
 namespace GameSDK.Time
 {
-    public interface ITimeApp : IGameSDKService
+    public interface ITimeApp : IServiceProvider
     {
         Task<long> GetTimestamp();
     }

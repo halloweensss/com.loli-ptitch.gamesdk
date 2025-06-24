@@ -7,7 +7,7 @@ namespace GameSDK.Advertisement
 {
     public sealed class Rewarded
     {
-        private readonly Dictionary<PlatformServiceType, IRewardedAds> _services = new(2);
+        private readonly Dictionary<string, IRewardedAds> _services = new(2);
 
         internal Rewarded()
         {
@@ -23,11 +23,11 @@ namespace GameSDK.Advertisement
 
         public void Register(IRewardedAds service)
         {
-            if (_services.TryAdd(service.PlatformService, service) == false)
+            if (_services.TryAdd(service.ServiceId, service) == false)
             {
                 if (GameApp.IsDebugMode)
                     Debug.LogWarning(
-                        $"[GameSDK.Advertisement.Rewarded]: The platform {service.PlatformService} has already been registered!");
+                        $"[GameSDK.Advertisement.Rewarded]: The platform {service.ServiceId} has already been registered!");
 
                 return;
             }
@@ -40,16 +40,16 @@ namespace GameSDK.Advertisement
             service.OnRewardedRewarded += OnRewardedHandler;
 
             if (GameApp.IsDebugMode)
-                Debug.Log($"[GameSDK.Advertisement.Rewarded]: Platform {service.PlatformService} is registered!");
+                Debug.Log($"[GameSDK.Advertisement.Rewarded]: Platform {service.ServiceId} is registered!");
         }
 
         public void Unregister(IRewardedAds service)
         {
-            if (_services.Remove(service.PlatformService) == false)
+            if (_services.Remove(service.ServiceId) == false)
             {
                 if (GameApp.IsDebugMode)
                     Debug.LogWarning(
-                        $"[GameSDK.Advertisement.Rewarded]: The platform {service.PlatformService} has not been registered!");
+                        $"[GameSDK.Advertisement.Rewarded]: The platform {service.ServiceId} has not been registered!");
 
                 return;
             }
@@ -62,7 +62,7 @@ namespace GameSDK.Advertisement
             service.OnRewardedRewarded -= OnRewardedHandler;
 
             if (GameApp.IsDebugMode)
-                Debug.Log($"[GameSDK.Advertisement.Rewarded]: Platform {service.PlatformService} is unregistered!");
+                Debug.Log($"[GameSDK.Advertisement.Rewarded]: Platform {service.ServiceId} is unregistered!");
         }
 
         public async void Show()

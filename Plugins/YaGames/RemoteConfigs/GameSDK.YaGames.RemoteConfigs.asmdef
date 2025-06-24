@@ -3,15 +3,22 @@
     "rootNamespace": "GameSDK",
     "references": [
         "GameSDK.Core",
-        "GameSDK.RemoteConfigs"
+        "GameSDK.RemoteConfigs",
+        "GameSDK.YaGames.Core"
     ],
-    "includePlatforms": [],
+    "includePlatforms": [
+        "Editor",
+        "WebGL"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,
-    "defineConstraints": [],
+    "defineConstraints": [
+        "REMOTE_CONFIGS_YANDEX",
+        "CORE_YANDEX"
+    ],
     "versionDefines": [],
     "noEngineReferences": false
 }

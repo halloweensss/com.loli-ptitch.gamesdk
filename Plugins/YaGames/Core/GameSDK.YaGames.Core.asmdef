@@ -4,13 +4,18 @@
     "references": [
         "GameSDK.Core"
     ],
-    "includePlatforms": [],
+    "includePlatforms": [
+        "Editor",
+        "WebGL"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,
-    "defineConstraints": [],
+    "defineConstraints": [
+        "CORE_YANDEX"
+    ],
     "versionDefines": [],
     "noEngineReferences": false
 }

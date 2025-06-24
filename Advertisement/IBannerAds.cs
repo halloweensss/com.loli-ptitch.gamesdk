@@ -1,10 +1,11 @@
 using System;
 using System.Threading.Tasks;
 using GameSDK.Core;
+using IServiceProvider = GameSDK.Core.IServiceProvider;
 
 namespace GameSDK.Advertisement
 {
-    public interface IBannerAds : IGameSDKService
+    public interface IBannerAds : IServiceProvider
     {
         event Action<IBannerAds> OnShownBanner;
         event Action<IBannerAds> OnHiddenBanner;

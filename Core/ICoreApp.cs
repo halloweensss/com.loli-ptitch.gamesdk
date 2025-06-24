@@ -2,7 +2,7 @@
 
 namespace GameSDK.Core
 {
-    public interface ICoreApp : IGameSDKService
+    public interface ICoreApp : IServiceProvider
     {
         DeviceType DeviceType { get; }
         string AppId { get; }

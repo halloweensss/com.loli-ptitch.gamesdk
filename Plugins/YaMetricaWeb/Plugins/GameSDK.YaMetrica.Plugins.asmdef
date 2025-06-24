@@ -1,19 +1,18 @@
 {
-    "name": "GameSDK.Plugins.YaMetricaWeb.Editor",
+    "name": "GameSDK.YaMetrica.Plugins",
     "rootNamespace": "GameSDK",
-    "references": [
-        "GameSDK.Extensions",
-        "GameSDK.YaMetrica"
-    ],
+    "references": [],
     "includePlatforms": [
-        "Editor"
+        "WebGL"
     ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,
-    "defineConstraints": [],
+    "defineConstraints": [
+        "WEB_YANDEX_METRICA"
+    ],
     "versionDefines": [],
     "noEngineReferences": false
 }

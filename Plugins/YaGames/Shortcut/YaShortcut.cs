@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using AOT;
 using GameSDK.Core;
-using GameSDK.Core.Properties;
+using GameSDK.Plugins.YaGames.Core;
 using GameSDK.Shortcut;
 using UnityEngine;
 
@@ -14,7 +14,7 @@ namespace GameSDK.Plugins.YaGames.Shortcut
         private static readonly YaShortcut Instance = new YaShortcut();
         
         private ShortcutStatus _status;
-        public PlatformServiceType PlatformService => PlatformServiceType.YaGames;
+        public string ServiceId => Service.YaGames;
         public InitializationStatus InitializationStatus => InitializationStatus.Initialized;
         public async Task<bool> Create()
         {

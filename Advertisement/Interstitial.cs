@@ -13,7 +13,7 @@ namespace GameSDK.Advertisement
         public event Action OnError;
         public event Action OnClicked;
         
-        private readonly Dictionary<PlatformServiceType, IInterstitialAds> _services = new(2);
+        private readonly Dictionary<string, IInterstitialAds> _services = new(2);
         
         internal Interstitial()
         {
@@ -22,11 +22,11 @@ namespace GameSDK.Advertisement
 
         public void Register(IInterstitialAds service)
         {
-            if (_services.TryAdd(service.PlatformService, service) == false)
+            if (_services.TryAdd(service.ServiceId, service) == false)
             {
                 if (GameApp.IsDebugMode)
                     Debug.LogWarning(
-                        $"[GameSDK.Advertisement.Interstitial]: The platform {service.PlatformService} has already been registered!");
+                        $"[GameSDK.Advertisement.Interstitial]: The platform {service.ServiceId} has already been registered!");
 
                 return;
             }
@@ -38,16 +38,16 @@ namespace GameSDK.Advertisement
             service.OnClickedInterstitial += OnClickedHandler;
 
             if (GameApp.IsDebugMode)
-                Debug.Log($"[GameSDK.Advertisement.Interstitial]: Platform {service.PlatformService} is registered!");
+                Debug.Log($"[GameSDK.Advertisement.Interstitial]: Platform {service.ServiceId} is registered!");
         }
         
         public void Unregister(IInterstitialAds service)
         {
-            if (_services.Remove(service.PlatformService) == false)
+            if (_services.Remove(service.ServiceId) == false)
             {
                 if (GameApp.IsDebugMode)
                     Debug.LogWarning(
-                        $"[GameSDK.Advertisement.Interstitial]: The platform {service.PlatformService} has not been registered!");
+                        $"[GameSDK.Advertisement.Interstitial]: The platform {service.ServiceId} has not been registered!");
 
                 return;
             }
@@ -59,7 +59,7 @@ namespace GameSDK.Advertisement
             service.OnClickedInterstitial -= OnClickedHandler;
             
             if (GameApp.IsDebugMode)
-                Debug.Log($"[GameSDK.Advertisement.Interstitial]: Platform {service.PlatformService} is unregistered!");
+                Debug.Log($"[GameSDK.Advertisement.Interstitial]: Platform {service.ServiceId} is unregistered!");
         }
 
         public async void Show()

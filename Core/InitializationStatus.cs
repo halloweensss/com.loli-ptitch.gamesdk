@@ -1,4 +1,4 @@
-﻿namespace GameSDK.Core.Properties
+﻿namespace GameSDK.Core
 {
     public enum InitializationStatus
     {

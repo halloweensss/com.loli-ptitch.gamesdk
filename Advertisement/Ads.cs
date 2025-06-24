@@ -2,17 +2,16 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using GameSDK.Core;
-using GameSDK.Core.Properties;
 using UnityEngine;
 
 namespace GameSDK.Advertisement
 {
-    public sealed class Ads
+    public sealed class Ads : IGameService
     {
         private static readonly Ads Instance = new();
 
-        private readonly Dictionary<PlatformServiceType, IAdsApp> _services = new(2);
-        
+        private readonly Dictionary<string, IAdsApp> _services = new(2);
+
         private InitializationStatus _initializationStatus = InitializationStatus.None;
         public static Interstitial Interstitial { get; } = new();
         public static Rewarded Rewarded { get; } = new();
@@ -20,24 +19,29 @@ namespace GameSDK.Advertisement
 
         public static bool IsInitialized => Instance._initializationStatus == InitializationStatus.Initialized;
 
+        public string ServiceName => "Advertisement";
+
         public static event Action OnInitialized;
         public static event Action OnInitializeError;
-        
-        public static void Register(IAdsApp app) => Instance.RegisterInternal(app);
-        
+
+        public static void Register(IAdsApp app)
+        {
+            Instance.RegisterInternal(app);
+        }
+
         private void RegisterInternal(IAdsApp app)
         {
-            if (_services.TryAdd(app.PlatformService, app) == false)
+            if (_services.TryAdd(app.ServiceId, app) == false)
             {
                 if (GameApp.IsDebugMode)
                     Debug.LogWarning(
-                        $"[GameSDK.Advertisement]: The platform {app.PlatformService} has already been registered!");
+                        $"[GameSDK.Advertisement]: The platform {app.ServiceId} has already been registered!");
 
                 return;
             }
 
             if (GameApp.IsDebugMode)
-                Debug.Log($"[GameSDK.Advertisement]: Platform {app.PlatformService} is registered!");
+                Debug.Log($"[GameSDK.Advertisement]: Platform {app.ServiceId} is registered!");
         }
 
         public static async Task Initialize()

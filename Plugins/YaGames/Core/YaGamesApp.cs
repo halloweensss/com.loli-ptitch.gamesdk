@@ -1,9 +1,9 @@
 using System;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using AOT;
 using GameSDK.Core;
-using GameSDK.Core.Properties;
 using UnityEngine;
 using DeviceType = GameSDK.Core.DeviceType;
 
@@ -11,7 +11,7 @@ namespace GameSDK.Plugins.YaGames.Core
 {
     internal sealed class YaGamesApp : ICoreApp
     {
-        private static readonly YaGamesApp Instance = new YaGamesApp();
+        private static readonly YaGamesApp Instance = new();
 
         private InitializationStatus _status = InitializationStatus.None;
         private DeviceType _device = DeviceType.Undefined;
@@ -19,7 +19,7 @@ namespace GameSDK.Plugins.YaGames.Core
         private bool _ready;
         private bool _started = false;
 
-        public PlatformServiceType PlatformService => PlatformServiceType.YaGames;
+        public string ServiceId => Service.YaGames;
         public InitializationStatus InitializationStatus => _status;
 
         public DeviceType DeviceType

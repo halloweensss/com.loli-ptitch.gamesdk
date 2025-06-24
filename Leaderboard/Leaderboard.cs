@@ -4,19 +4,20 @@ using System.Linq;
 using System.Threading.Tasks;
 using GameSDK.Authentication;
 using GameSDK.Core;
-using GameSDK.Core.Properties;
 using UnityEngine;
 
 namespace GameSDK.Leaderboard
 {
-    public class Leaderboard
+    public class Leaderboard : IGameService
     {
         private static readonly Leaderboard Instance = new();
 
-        private readonly Dictionary<PlatformServiceType, ILeaderboardApp> _services = new(2);
+        private readonly Dictionary<string, ILeaderboardApp> _services = new(2);
 
         private InitializationStatus _initializationStatus = InitializationStatus.None;
         public static bool IsInitialized => Instance._initializationStatus == InitializationStatus.Initialized;
+
+        public string ServiceName => "Leaderboard";
 
         public static event Action OnInitialized;
         public static event Action OnInitializeError;
@@ -28,17 +29,17 @@ namespace GameSDK.Leaderboard
 
         private void RegisterInternal(ILeaderboardApp app)
         {
-            if (_services.TryAdd(app.PlatformService, app) == false)
+            if (_services.TryAdd(app.ServiceId, app) == false)
             {
                 if (GameApp.IsDebugMode)
                     Debug.LogWarning(
-                        $"[GameSDK.Leaderboard]: The platform {app.PlatformService} has already been registered!");
+                        $"[GameSDK.Leaderboard]: The platform {app.ServiceId} has already been registered!");
 
                 return;
             }
 
             if (GameApp.IsDebugMode)
-                Debug.Log($"[GameSDK.Leaderboard]: Platform {app.PlatformService} is registered!");
+                Debug.Log($"[GameSDK.Leaderboard]: Platform {app.ServiceId} is registered!");
         }
 
         public static async Task Initialize()

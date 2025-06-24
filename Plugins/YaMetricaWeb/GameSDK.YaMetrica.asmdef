@@ -5,13 +5,18 @@
         "GameSDK.Core",
         "GameSDK.Analytics"
     ],
-    "includePlatforms": [],
+    "includePlatforms": [
+        "Editor",
+        "WebGL"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,
-    "defineConstraints": [],
+    "defineConstraints": [
+        "WEB_YANDEX_METRICA"
+    ],
     "versionDefines": [],
     "noEngineReferences": false
 }

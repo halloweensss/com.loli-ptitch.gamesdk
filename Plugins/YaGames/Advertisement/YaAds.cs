@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using AOT;
 using GameSDK.Advertisement;
 using GameSDK.Core;
-using GameSDK.Core.Properties;
+using GameSDK.Plugins.YaGames.Core;
 using UnityEngine;
 
 namespace GameSDK.Plugins.YaGames.Advertisement
@@ -13,7 +13,7 @@ namespace GameSDK.Plugins.YaGames.Advertisement
     {
         private static readonly YaAds Instance = new();
 
-        public PlatformServiceType PlatformService => PlatformServiceType.YaGames;
+        public string ServiceId => Service.YaGames;
         public InitializationStatus InitializationStatus { get; private set; } = InitializationStatus.None;
 
         public Task Initialize()

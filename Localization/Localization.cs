@@ -1,30 +1,56 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using GameSDK.Core;
 using TMPro;
 using UnityEngine;
 
 namespace GameSDK.Localization
 {
-    public class Localization
+    public class Localization : IGameService
     {
         private static readonly Localization Instance = new();
-
-        private string _currentLanguage;
         private readonly Dictionary<string, LocalizationDatabase> _databases = new(32);
         private readonly Dictionary<string, LocalizationDatabase> _keysDatabase = new(32);
         private readonly Dictionary<string, Dictionary<string, string>> _localizations = new(32);
-        private Dictionary<string, Language> _languages = new(32);
         private readonly Dictionary<string, HashSet<TMP_Text>> _tmpTexts = new(32);
+
+        private string _currentLanguage;
+        private Dictionary<string, Language> _languages = new(32);
+
+        public string ServiceName => "Localization";
         public static event Action<string> OnLanguageChanged;
         public static event Action<string, string> OnCurrentLanguageKeyAdded;
-        
-        public static void AddDatabase(LocalizationDatabase database) => Instance.AddDatabaseInternal(database);
-        public static string GetValue(string key) => Instance.GetValueInternal(key);
-        public static void ChangeLanguage(string code) => Instance.ChangeLanguageInternal(code);
-        public static void AddTMPText(string key, TMP_Text text) => Instance.AddTMPTextInternal(key, text);
-        public static void RemoveTMPText(string key, TMP_Text text) => Instance.RemoveTMPTextInternal(key, text);
-        public static void UpdateTMPTexts() => Instance.UpdateTMPTextsInternal();
+
+        public static void AddDatabase(LocalizationDatabase database)
+        {
+            Instance.AddDatabaseInternal(database);
+        }
+
+        public static string GetValue(string key)
+        {
+            return Instance.GetValueInternal(key);
+        }
+
+        public static void ChangeLanguage(string code)
+        {
+            Instance.ChangeLanguageInternal(code);
+        }
+
+        public static void AddTMPText(string key, TMP_Text text)
+        {
+            Instance.AddTMPTextInternal(key, text);
+        }
+
+        public static void RemoveTMPText(string key, TMP_Text text)
+        {
+            Instance.RemoveTMPTextInternal(key, text);
+        }
+
+        public static void UpdateTMPTexts()
+        {
+            Instance.UpdateTMPTextsInternal();
+        }
 
         private void AddTMPTextInternal(string key, TMP_Text text)
         {
@@ -32,11 +58,11 @@ namespace GameSDK.Localization
             {
 #if UNITY_EDITOR
                 Debug.LogWarning(
-                    $"[Localization]: TMP Text for add is NULL!");
+                    "[Localization]: TMP Text for add is NULL!");
 #endif
                 return;
             }
-            
+
             if (_tmpTexts.TryGetValue(key, out var texts) == false)
             {
                 texts = new HashSet<TMP_Text>();
@@ -53,21 +79,21 @@ namespace GameSDK.Localization
             }
 
             texts.Add(text);
-            
+
             text.text = GetValue(key);
         }
-        
+
         private void RemoveTMPTextInternal(string key, TMP_Text text)
         {
             if (text == null)
             {
 #if UNITY_EDITOR
                 Debug.LogWarning(
-                    $"[Localization]: TMP Text for remove is NULL!");
+                    "[Localization]: TMP Text for remove is NULL!");
 #endif
                 return;
             }
-            
+
             if (_tmpTexts.TryGetValue(key, out var texts) == false)
             {
 #if UNITY_EDITOR
@@ -92,11 +118,9 @@ namespace GameSDK.Localization
         private void UpdateTMPTextsInternal()
         {
             foreach (var text in _tmpTexts)
-            {
                 UpdateTMPTextsInternal(text.Key);
-            }
         }
-        
+
         private void UpdateTMPTextsInternal(string id)
         {
             if (_tmpTexts.TryGetValue(id, out var texts) == false) return;
@@ -104,7 +128,7 @@ namespace GameSDK.Localization
             foreach (var text in texts)
             {
                 if (text == null) continue;
-                
+
                 text.text = GetValue(id);
             }
         }
@@ -125,7 +149,7 @@ namespace GameSDK.Localization
             _currentLanguage = code;
 
             UpdateTMPTexts();
-            
+
             OnLanguageChanged?.Invoke(_currentLanguage);
         }
 
@@ -152,7 +176,7 @@ namespace GameSDK.Localization
                 if (_currentLanguage == localizedLanguage.Language.Code)
                 {
                     UpdateTMPTextsInternal(text.Key);
-                    
+
                     OnCurrentLanguageKeyAdded?.Invoke(text.Key, text.Value);
                 }
             }
@@ -162,16 +186,14 @@ namespace GameSDK.Localization
         {
             if (_databases.TryAdd(database.Id, database) == false)
             {
-#if  UNITY_EDITOR
+#if UNITY_EDITOR
                 Debug.LogWarning($"[Localization]: Database {database.Id} has already been added!");
-#endif   
+#endif
                 return;
             }
-            
+
             foreach (var language in database.Languages)
-            {
                 AppendLocalization(database, language);
-            }
         }
 
         private string GetValueInternal(string key)
@@ -180,16 +202,14 @@ namespace GameSDK.Localization
             {
 #if UNITY_EDITOR
                 Debug.LogWarning(
-                    $"[Localization]: Localization language not selected!");
+                    "[Localization]: Localization language not selected!");
 #endif
                 return key;
             }
 
             if (TryGetValueFromLanguage(key, _currentLanguage, out var text))
-            {
                 return text;
-            }
-            
+
 #if UNITY_EDITOR
             Debug.LogWarning(
                 $"[Localization]: Text with key [{key}] is not contains in language [{_currentLanguage}]!");
@@ -203,14 +223,14 @@ namespace GameSDK.Localization
 #endif
                 return key;
             }
-            
+
 #if UNITY_EDITOR
             Debug.LogWarning(
                 $"[Localization]: Text with key [{key}] is not contains in default language in database [{database.Id}]!");
 #endif
 
             return key;
-            
+
 
             bool TryGetValueFromLanguage(string key, string languageCode, out string text)
             {
@@ -222,7 +242,7 @@ namespace GameSDK.Localization
                 return false;
             }
         }
-        
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void InitializeInternal()
         {
@@ -230,6 +250,5 @@ namespace GameSDK.Localization
             Instance._languages.TryGetValue("en", out var language);
             Instance._currentLanguage = language.Code;
         }
-        
     }
 }

@@ -5,19 +5,18 @@ using System.Globalization;
 using System.Text;
 using System.Threading.Tasks;
 using GameSDK.Core;
-using GameSDK.Core.Properties;
 using UnityEngine;
 
 namespace GameSDK.RemoteConfigs
 {
-    public class RemoteConfigs
+    public class RemoteConfigs : IGameService
     {
         private static readonly RemoteConfigs Instance = new();
 
         private readonly RemoteConfigInjector _injector;
         private readonly Dictionary<string, RemoteConfigValue> _remoteValues = new(16);
 
-        private readonly Dictionary<PlatformServiceType, IRemoteConfigsApp> _services = new();
+        private readonly Dictionary<string, IRemoteConfigsApp> _services = new();
         private InitializationStatus _initializationStatus = InitializationStatus.None;
 
         private RemoteConfigs()
@@ -29,24 +28,29 @@ namespace GameSDK.RemoteConfigs
 
         public static IReadOnlyDictionary<string, RemoteConfigValue> RemoteValues => Instance._remoteValues;
 
+        public string ServiceName => "RemoteConfigs";
+
         public static event Action OnInitialized;
         public static event Action OnInitializeError;
 
-        public static void Register(IRemoteConfigsApp app) => Instance.RegisterInternal(app);
-        
+        public static void Register(IRemoteConfigsApp app)
+        {
+            Instance.RegisterInternal(app);
+        }
+
         private void RegisterInternal(IRemoteConfigsApp app)
         {
-            if (_services.TryAdd(app.PlatformService, app) == false)
+            if (_services.TryAdd(app.ServiceId, app) == false)
             {
                 if (GameApp.IsDebugMode)
                     Debug.LogWarning(
-                        $"[GameSDK.RemoteConfigs]: The platform {app.PlatformService} has already been registered!");
+                        $"[GameSDK.RemoteConfigs]: The platform {app.ServiceId} has already been registered!");
 
                 return;
             }
 
             if (GameApp.IsDebugMode)
-                Debug.Log($"[GameSDK.RemoteConfigs]: Platform {app.PlatformService} is registered!");
+                Debug.Log($"[GameSDK.RemoteConfigs]: Platform {app.ServiceId} is registered!");
         }
 
         public static async Task Initialize()
@@ -64,7 +68,7 @@ namespace GameSDK.RemoteConfigs
             }
 
             Instance._initializationStatus = InitializationStatus.Waiting;
-            
+
             await Instance.InitializeDefaultConfigs();
 
             foreach (var service in Instance._services)
@@ -162,7 +166,7 @@ namespace GameSDK.RemoteConfigs
             {
                 foreach (var value in config.DefaultValues)
                     SetDefaultValue(value.Key, value.Value);
-                
+
                 await Task.Yield();
             }
         }
@@ -200,17 +204,17 @@ namespace GameSDK.RemoteConfigs
             if (_remoteValues.TryGetValue(key, out var remoteValue))
             {
                 if (remoteValue.Source == ConfigValueSource.DefaultValue)
-                {
                     _remoteValues[key] =
                         new RemoteConfigValue(Encoding.UTF8.GetBytes(data), ConfigValueSource.DefaultValue);
-                }
             }
             else
+            {
                 _remoteValues.Add(key, new RemoteConfigValue
                 {
                     Data = Encoding.UTF8.GetBytes(data),
                     Source = ConfigValueSource.DefaultValue
                 });
+            }
         }
 
         private bool TryGetValueInternal<T>(string key, out T value) where T : unmanaged

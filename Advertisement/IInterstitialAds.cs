@@ -1,10 +1,11 @@
 using System;
 using System.Threading.Tasks;
 using GameSDK.Core;
+using IServiceProvider = GameSDK.Core.IServiceProvider;
 
 namespace GameSDK.Advertisement
 {
-    public interface IInterstitialAds : IGameSDKService
+    public interface IInterstitialAds : IServiceProvider
     {
         event Action<IInterstitialAds> OnShownInterstitial;
         event Action<IInterstitialAds> OnClosedInterstitial;

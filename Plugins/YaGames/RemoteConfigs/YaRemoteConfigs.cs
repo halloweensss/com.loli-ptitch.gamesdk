@@ -5,8 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using AOT;
 using GameSDK.Core;
-using GameSDK.Core.Properties;
 using GameSDK.Core.Tools;
+using GameSDK.Plugins.YaGames.Core;
 using GameSDK.RemoteConfigs;
 using UnityEngine;
 
@@ -18,7 +18,7 @@ namespace GameSDK.Plugins.YaGames.RemoteConfigs
 
         private readonly Dictionary<string, RemoteConfigValue> _remoteValues = new(16);
 
-        public PlatformServiceType PlatformService => PlatformServiceType.YaGames;
+        public string ServiceId => Service.YaGames;
         public InitializationStatus InitializationStatus { get; private set; } = InitializationStatus.None;
 
         public IReadOnlyDictionary<string, RemoteConfigValue> RemoteValues => _remoteValues;

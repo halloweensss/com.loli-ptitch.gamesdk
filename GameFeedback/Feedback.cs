@@ -6,12 +6,14 @@ using UnityEngine;
 
 namespace GameSDK.GameFeedback
 {
-    public class Feedback
+    public class Feedback : IGameService
     {
-        private static readonly Feedback Instance = new ();
-        private readonly Dictionary<PlatformServiceType, IFeedbackApp> _services = new(2);
+        private static readonly Feedback Instance = new();
+        private readonly Dictionary<string, IFeedbackApp> _services = new(2);
         private ReviewStatus _status;
         public static ReviewStatus Status => Instance._status;
+
+        public string ServiceName => "Feedback";
 
         public static void Register(IFeedbackApp app)
         {
@@ -20,17 +22,17 @@ namespace GameSDK.GameFeedback
 
         private void RegisterInternal(IFeedbackApp app)
         {
-            if (_services.TryAdd(app.PlatformService, app) == false)
+            if (_services.TryAdd(app.ServiceId, app) == false)
             {
                 if (GameApp.IsDebugMode)
                     Debug.LogWarning(
-                        $"[GameSDK.Feedback]: The platform {app.PlatformService} has already been registered!");
+                        $"[GameSDK.Feedback]: The platform {app.ServiceId} has already been registered!");
 
                 return;
             }
 
             if (GameApp.IsDebugMode)
-                Debug.Log($"[GameSDK.Feedback]: Platform {app.PlatformService} is registered!");
+                Debug.Log($"[GameSDK.Feedback]: Platform {app.ServiceId} is registered!");
         }
 
         public static async Task<(bool, FailReviewReason)> CanReview()

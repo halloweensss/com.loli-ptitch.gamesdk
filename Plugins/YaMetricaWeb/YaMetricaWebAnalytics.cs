@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using AOT;
 using GameSDK.Analytics;
 using GameSDK.Core;
-using GameSDK.Core.Properties;
 using Newtonsoft.Json;
 using UnityEngine;
 
@@ -20,8 +19,8 @@ namespace GameSDK.Plugins.YaMetricaWeb
         private YaMetricaWebSettings _mainSettings;
         private YaMetricaWebSettings[] _settings;
 
-        private YaMetricaErrorTracker _errorTracker;
-        public PlatformServiceType PlatformService => PlatformServiceType.Analytics;
+        private readonly YaMetricaErrorTracker _errorTracker;
+        public string ServiceId => "YaMetricaWeb";
         public InitializationStatus InitializationStatus { get; private set; }
         public AnalyticsProviderType ProviderType => AnalyticsProviderType.YaGamesWeb;
 

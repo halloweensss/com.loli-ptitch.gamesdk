@@ -2,24 +2,23 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using GameSDK.Core.Properties;
 using UnityEngine;
 
 namespace GameSDK.Core
 {
-    public class GameApp
+    public class GameApp : IGameService
     {
         private static readonly GameApp Instance = new();
-
-        private GameAppRunner _runner;
-        private bool _isReady = false;
-        private bool _isStarted = false;
-        private bool _manuallyStarted = false;
-        private int _startedCounter = 0;
+        private readonly Dictionary<string, ICoreApp> _services = new(2);
+        private InitializationStatus _initializationStatus = InitializationStatus.None;
+        private bool _isReady;
+        private bool _isStarted;
 
         private bool _isVisible = true;
-        private InitializationStatus _initializationStatus = InitializationStatus.None;
-        private readonly Dictionary<PlatformServiceType, ICoreApp> _services = new Dictionary<PlatformServiceType, ICoreApp>();
+        private bool _manuallyStarted;
+
+        private GameAppRunner _runner;
+        private int _startedCounter;
         public static GameAppRunner Runner => Instance._runner;
         public static DeviceType DeviceType => Instance.GetDeviceType();
         public static string Lang => Instance.GetLang();
@@ -30,43 +29,48 @@ namespace GameSDK.Core
         public static bool IsReady => Instance._isReady;
         public static bool IsStarted => Instance._isStarted;
         public static bool IsVisible => Instance._isVisible;
+
+        public string ServiceName => "Core";
         public static event Action OnInitialized;
         public static event Action OnInitializeError;
         public static event Action<bool> OnStartChanged;
         public static event Action<bool> OnVisibilityChanged;
-        
-        public static void Register(ICoreApp app) => Instance.RegisterInternal(app);
-        
-        public static void RegisterRunner(GameAppRunner runner) => Instance.RegisterRunnerInternal(runner);
-        
-        public static void OnVisibilityChange(bool isVisible) => Instance.OnVisibilityChangeInternal(isVisible);
-        
+
+        public static void Register(ICoreApp app)
+        {
+            Instance.RegisterInternal(app);
+        }
+
+        public static void RegisterRunner(GameAppRunner runner)
+        {
+            Instance.RegisterRunnerInternal(runner);
+        }
+
+        public static void OnVisibilityChange(bool isVisible)
+        {
+            Instance.OnVisibilityChangeInternal(isVisible);
+        }
+
         private void RegisterInternal(ICoreApp app)
         {
-            if (_services.TryAdd(app.PlatformService, app) == false)
+            if (_services.TryAdd(app.ServiceId, app) == false)
             {
                 if (IsDebugMode)
-                {
-                    Debug.LogWarning($"[GameSDK]: The platform {app.PlatformService} has already been registered!");
-                }
+                    Debug.LogWarning($"[GameSDK]: The platform {app.ServiceId} has already been registered!");
 
                 return;
             }
 
             if (IsDebugMode)
-            {
-                Debug.Log($"[GameSDK]: Platform {app.PlatformService} is registered!");
-            }
+                Debug.Log($"[GameSDK]: Platform {app.ServiceId} is registered!");
         }
-        
+
         private void RegisterRunnerInternal(GameAppRunner runner)
         {
             _runner = runner;
 
             if (IsDebugMode)
-            {
-                Debug.Log($"[GameSDK]: Runner is registered!");
-            }
+                Debug.Log("[GameSDK]: Runner is registered!");
         }
 
         private async void OnVisibilityChangeInternal(bool isVisible)
@@ -74,18 +78,12 @@ namespace GameSDK.Core
             _isVisible = isVisible;
 
             if (_isVisible)
-            {
                 await GameStart();
-            }
             else
-            {
                 await GameStop();
-            }
-            
+
             if (IsDebugMode)
-            {
                 Debug.Log($"[GameSDK]: Visibility changed to {_isVisible}");
-            }
 
             OnVisibilityChanged?.Invoke(_isVisible);
         }
@@ -93,9 +91,7 @@ namespace GameSDK.Core
         private DeviceType GetDeviceType()
         {
             if (_services.Count > 0)
-            {
                 return _services.First().Value.DeviceType;
-            }
 
             return SystemInfo.deviceType switch
             {
@@ -106,136 +102,112 @@ namespace GameSDK.Core
                 _ => DeviceType.Undefined
             };
         }
-        
+
         private string GetLang()
         {
             if (_services.Count > 0)
-            {
                 return _services.First().Value.Lang;
-            }
 
             return "en";
         }
-        
+
         private string GetPayload()
         {
             if (_services.Count > 0)
-            {
                 return _services.First().Value.Payload;
-            }
 
             return string.Empty;
         }
-        
+
         private string GetAppId()
         {
             if (_services.Count > 0)
-            {
                 return _services.First().Value.AppId;
-            }
 
             return "-1";
         }
-    
+
         public static async Task Initialize()
         {
             if (IsInitialized)
             {
                 if (IsDebugMode)
-                {
-                    Debug.LogWarning($"[GameSDK]: SDK has already been initialized!");
-                }
-                
+                    Debug.LogWarning("[GameSDK]: SDK has already been initialized!");
+
                 return;
             }
-            
+
             Instance._initializationStatus = InitializationStatus.Waiting;
 
             foreach (var service in Instance._services)
-            {
                 try
                 {
                     await service.Value.Initialize();
-                    
+
                     if (service.Value.InitializationStatus == InitializationStatus.Initialized) continue;
-                    
+
                     Instance._initializationStatus = service.Value.InitializationStatus;
                     return;
                 }
                 catch (Exception e)
                 {
                     if (IsDebugMode)
-                    {
                         Debug.LogError($"[GameSDK]: An initialize SDK error has occurred {e.Message}!");
-                    }
-                    
+
                     Instance._initializationStatus = InitializationStatus.Error;
                     OnInitializeError?.Invoke();
                     return;
                 }
-            }
 
             Instance._initializationStatus = InitializationStatus.Initialized;
             OnInitialized?.Invoke();
         }
-        
+
         public static async Task GameReady()
         {
             if (IsReady)
             {
                 if (IsDebugMode)
-                {
                     Debug.LogWarning(
-                        $"[GameSDK]: SDK has already been ready!");
-                }
+                        "[GameSDK]: SDK has already been ready!");
 
                 return;
             }
-            
+
             if (IsInitialized == false)
-            {
                 await Initialize();
-            }
-            
+
             if (IsInitialized == false)
             {
                 if (IsDebugMode)
-                {
                     Debug.LogWarning(
-                        $"[GameSDK]: Before game ready, initialize the sdk\nGameApp.Initialize()!");
-                }
-                
+                        "[GameSDK]: Before game ready, initialize the sdk\nGameApp.Initialize()!");
+
                 return;
             }
 
             foreach (var service in Instance._services)
-            {
                 try
                 {
                     await service.Value.Ready();
-                    
+
                     if (service.Value.IsReady) continue;
-                    
+
                     Instance._isReady = false;
                     return;
                 }
                 catch (Exception e)
                 {
                     if (IsDebugMode)
-                    {
                         Debug.LogError($"[GameSDK]: An game ready SDK error has occurred {e.Message}!");
-                    }
-                    
+
                     return;
                 }
-            }
 
             Instance._isReady = true;
-            
+
             if (IsDebugMode)
-            {
-                Debug.Log($"[GameSDK]: Game ready!");
-            }
+                Debug.Log("[GameSDK]: Game ready!");
         }
 
         public static async Task Start()
@@ -243,55 +215,46 @@ namespace GameSDK.Core
             Instance._manuallyStarted = true;
             await GameStart();
         }
-        
+
         public static async Task Stop()
         {
             await GameStop();
             Instance._manuallyStarted = false;
         }
-        
+
         public static async Task GameStart()
         {
-            if(Instance._manuallyStarted == false)
+            if (Instance._manuallyStarted == false)
                 return;
-            
-            if(Instance._startedCounter > 1)
-            {
+
+            if (Instance._startedCounter > 1)
                 Instance._startedCounter--;
-            }
-            
-            if(Instance._startedCounter > 1)
+
+            if (Instance._startedCounter > 1)
                 return;
-            
+
             if (IsStarted)
             {
                 if (IsDebugMode)
-                {
                     Debug.LogWarning(
-                        $"[GameSDK]: SDK has already been started!");
-                }
+                        "[GameSDK]: SDK has already been started!");
 
                 return;
             }
-            
+
             if (IsInitialized == false)
-            {
                 await Initialize();
-            }
-            
+
             if (IsInitialized == false)
             {
                 if (IsDebugMode)
-                {
                     Debug.LogWarning(
-                        $"[GameSDK]: Before game start, initialize the sdk\nGameApp.Initialize()!");
-                }
-                
+                        "[GameSDK]: Before game start, initialize the sdk\nGameApp.Initialize()!");
+
                 return;
             }
 
             foreach (var service in Instance._services)
-            {
                 try
                 {
                     await service.Value.Start();
@@ -299,64 +262,50 @@ namespace GameSDK.Core
                 catch (Exception e)
                 {
                     if (IsDebugMode)
-                    {
                         Debug.LogError($"[GameSDK]: An game start SDK error has occurred {e.Message}!");
-                    }
-                    
+
                     return;
                 }
-            }
 
             Instance._isStarted = true;
             Instance._startedCounter = 1;
-            
+
             if (IsDebugMode)
-            {
-                Debug.Log($"[GameSDK]: Game start!");
-            }
-            
+                Debug.Log("[GameSDK]: Game start!");
+
             OnStartChanged?.Invoke(IsStarted);
         }
-        
+
         public static async Task GameStop()
         {
-            if(Instance._manuallyStarted == false)
+            if (Instance._manuallyStarted == false)
                 return;
-            
+
             if (IsStarted == false)
             {
                 if (IsDebugMode)
-                {
                     Debug.LogWarning(
-                        $"[GameSDK]: SDK has already been stopped!");
-                }
+                        "[GameSDK]: SDK has already been stopped!");
 
                 if (Instance._startedCounter >= 1)
-                {
                     Instance._startedCounter++;
-                }
 
                 return;
             }
-            
+
             if (IsInitialized == false)
-            {
                 await Initialize();
-            }
-            
+
             if (IsInitialized == false)
             {
                 if (IsDebugMode)
-                {
                     Debug.LogWarning(
-                        $"[GameSDK]: Before game stop, initialize the sdk\nGameApp.Initialize()!");
-                }
-                
+                        "[GameSDK]: Before game stop, initialize the sdk\nGameApp.Initialize()!");
+
                 return;
             }
 
             foreach (var service in Instance._services)
-            {
                 try
                 {
                     await service.Value.Stop();
@@ -364,22 +313,17 @@ namespace GameSDK.Core
                 catch (Exception e)
                 {
                     if (IsDebugMode)
-                    {
                         Debug.LogError($"[GameSDK]: An game stop SDK error has occurred {e.Message}!");
-                    }
-                    
+
                     return;
                 }
-            }
 
             Instance._isStarted = false;
             Instance._startedCounter++;
-            
+
             if (IsDebugMode)
-            {
-                Debug.Log($"[GameSDK]: Game stopped!");
-            }
-            
+                Debug.Log("[GameSDK]: Game stopped!");
+
             OnStartChanged?.Invoke(IsStarted);
         }
     }

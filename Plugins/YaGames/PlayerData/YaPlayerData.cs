@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 using AOT;
 using GameSDK.Authentication;
 using GameSDK.Core;
-using GameSDK.Core.Properties;
 using GameSDK.GameStorage;
+using GameSDK.Plugins.YaGames.Core;
 using UnityEngine;
 
 namespace GameSDK.Plugins.YaGames.PlayerData
@@ -40,7 +40,7 @@ namespace GameSDK.Plugins.YaGames.PlayerData
             { AvatarSizeType.Large, "large" }
         };
         
-        public PlatformServiceType PlatformService => PlatformServiceType.YaGames;
+        public string ServiceId => Service.YaGames;
         public InitializationStatus InitializationStatus => _status;
 
         public string Id

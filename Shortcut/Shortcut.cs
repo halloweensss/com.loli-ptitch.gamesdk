@@ -6,11 +6,13 @@ using UnityEngine;
 
 namespace GameSDK.Shortcut
 {
-    public class Shortcut
+    public class Shortcut : IGameService
     {
         private static readonly Shortcut Instance = new();
 
-        private readonly Dictionary<PlatformServiceType, IShortcutApp> _services = new();
+        private readonly Dictionary<string, IShortcutApp> _services = new();
+
+        public string ServiceName => "Shortcut";
 
         public static void Register(IShortcutApp app)
         {
@@ -19,17 +21,17 @@ namespace GameSDK.Shortcut
 
         private void RegisterInternal(IShortcutApp app)
         {
-            if (_services.TryAdd(app.PlatformService, app) == false)
+            if (_services.TryAdd(app.ServiceId, app) == false)
             {
                 if (GameApp.IsDebugMode)
                     Debug.LogWarning(
-                        $"[GameSDK.Shortcut]: The platform {app.PlatformService} has already been registered!");
+                        $"[GameSDK.Shortcut]: The platform {app.ServiceId} has already been registered!");
 
                 return;
             }
 
             if (GameApp.IsDebugMode)
-                Debug.Log($"[GameSDK.Shortcut]: Platform {app.PlatformService} is registered!");
+                Debug.Log($"[GameSDK.Shortcut]: Platform {app.ServiceId} is registered!");
         }
 
         public static async Task<bool> Create()
