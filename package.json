@@ -1,19 +1,17 @@
 {
-  "name": "com.cucumber.gamesdk",
-  "version": "0.6.0",
+  "name": "com.loli-ptitch.gamesdk",
+  "version": "0.7.0",
   "displayName": "Game SDK",
   "description": "Some services for your game",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/halloweensss/Services.git"
+    "url": "https://github.com/halloweensss/com.loli-ptitch.gamesdk.git"
   },
   "dependencies": {
     "com.unity.textmeshpro": "3.0.6",
     "com.unity.nuget.newtonsoft-json": "3.0.0"
   },
   "author": {
-    "name": "Cucumber",
-    "email": "",
-    "url": ""
+    "name": "loli-ptitch"
   }
 }
