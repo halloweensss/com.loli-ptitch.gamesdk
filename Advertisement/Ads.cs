@@ -16,6 +16,8 @@ namespace GameSDK.Advertisement
         public static Interstitial Interstitial { get; } = new();
         public static Rewarded Rewarded { get; } = new();
         public static Banner Banner { get; } = new();
+        
+        public static Revenue Revenue { get; } = new();
 
         public static bool IsInitialized => Instance._initializationStatus == InitializationStatus.Initialized;
 
@@ -23,6 +25,7 @@ namespace GameSDK.Advertisement
 
         public static event Action OnInitialized;
         public static event Action OnInitializeError;
+        public static event Action<AdRevenueData> OnAdRevenuePaid;
 
         public static void Register(IAdsApp app)
         {

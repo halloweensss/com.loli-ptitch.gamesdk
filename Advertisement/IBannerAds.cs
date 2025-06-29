@@ -10,7 +10,10 @@ namespace GameSDK.Advertisement
         event Action<IBannerAds> OnShownBanner;
         event Action<IBannerAds> OnHiddenBanner;
         event Action<IBannerAds> OnErrorBanner;
-        Task ShowBanner();
+        Task ShowBanner(BannerPosition position = BannerPosition.None, string placement = null);
+        void LoadBanner();
+        bool IsLoadedBanner(string placement = null);
+        double GetBannerEcpm(string placement = null);
         Task HideBanner();
     }
 }

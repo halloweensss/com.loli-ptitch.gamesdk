@@ -1,6 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using GameSDK.Core;
 using IServiceProvider = GameSDK.Core.IServiceProvider;
 
 namespace GameSDK.Advertisement
@@ -12,7 +11,13 @@ namespace GameSDK.Advertisement
         event Action<IInterstitialAds> OnShownFailedInterstitial;
         event Action<IInterstitialAds> OnErrorInterstitial;
         event Action<IInterstitialAds> OnClickedInterstitial;
+        event Action<IInterstitialAds> OnLoadedInterstitial;
+        event Action<IInterstitialAds> OnFailedToLoadInterstitial;
 
-        Task ShowInterstitial();
+        Task ShowInterstitial(string placement = null);
+        void LoadInterstitial();
+        bool IsLoadedInterstitial(string placement = null);
+        double GetInterstitialEcpm(string placement = null);
+
     }
 }

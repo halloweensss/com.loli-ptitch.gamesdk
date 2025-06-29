@@ -1,6 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using GameSDK.Core;
 using IServiceProvider = GameSDK.Core.IServiceProvider;
 
 namespace GameSDK.Advertisement
@@ -13,7 +12,12 @@ namespace GameSDK.Advertisement
         event Action<IRewardedAds> OnErrorRewarded;
         event Action<IRewardedAds> OnClickedRewarded;
         event Action<IRewardedAds> OnRewardedRewarded;
+        event Action<IRewardedAds> OnLoadedRewarded;
+        event Action<IRewardedAds> OnFailedToLoadRewarded;
         
-        Task ShowRewarded();
+        Task ShowRewarded(string placement = null);
+        void LoadRewarded();
+        bool IsLoadedRewarded(string placement = null);
+        double GetRewardedEcpm(string placement = null);
     }
 }
