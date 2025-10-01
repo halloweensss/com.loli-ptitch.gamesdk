@@ -39,7 +39,7 @@ var GameApp = {
             if(this.onVisibilityChanged === undefined)
                 return;
 
-            dynCall('vi', this.onVisibilityChanged, [true]);
+            {{{ makeDynCall('vi', 'this.onVisibilityChanged') }}}(true)
         },
 
         SendHidden: function ()
@@ -47,7 +47,7 @@ var GameApp = {
             if(gameApp.onVisibilityChanged === undefined)
                 return;
 
-            dynCall('vi', this.onVisibilityChanged, [false]);
+            {{{ makeDynCall('vi', 'this.onVisibilityChanged') }}}(false)
         },
     },
 
