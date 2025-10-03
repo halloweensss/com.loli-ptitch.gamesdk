@@ -10,6 +10,14 @@ namespace GameSDK.RemoteConfigs
     {
         private readonly ConditionalWeakTable<object, List<ICachedInfo>> _cachedObjectValues = new();
         private readonly Dictionary<string, List<ICachedInfo>> _cachedValues = new(32);
+
+        private readonly List<IDeserializerObject> _deserializerObjects = new()
+        {
+            new Deserialize.EmptyDeserializer(),
+            new Deserialize.ArrayDeserializer(),
+            new Deserialize.ListDeserializer(),
+            new Deserialize.ObjectDeserializer(),
+        };
         
         private readonly RemoteConfigs _remoteConfigs;
 
@@ -108,10 +116,14 @@ namespace GameSDK.RemoteConfigs
             {
                 var stringValue = remoteValue.StringValue;
 
-                if (value == null)
-                    value = JsonUtility.FromJson(stringValue, cachedInfo.ValueType);
-                else
-                    JsonUtility.FromJsonOverwrite(stringValue, value);
+                foreach (var deserializerObject in _deserializerObjects)
+                {
+                    if (deserializerObject.Check(value, valueType) == false)
+                        continue;
+
+                    value = deserializerObject.Deserialize(stringValue, value, valueType);
+                    break;
+                }
 
                 cachedInfo.TrySet(value);
                 return;
