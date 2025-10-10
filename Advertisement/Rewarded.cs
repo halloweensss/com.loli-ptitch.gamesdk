@@ -80,9 +80,7 @@ namespace GameSDK.Advertisement
 
                     return;
                 }
-
-                await GameApp.GameStop();
-
+                
                 foreach (var service in _services)
                     try
                     {
@@ -105,9 +103,19 @@ namespace GameSDK.Advertisement
             }
         }
 
-        internal void OnShowedHandler(IRewardedAds platform)
+        internal async void OnShowedHandler(IRewardedAds platform)
         {
-            OnShowed?.Invoke();
+            try
+            {
+                OnShowed?.Invoke();
+
+                await GameApp.GameStop();
+            }
+            catch (Exception e)
+            {
+                if (GameApp.IsDebugMode)
+                    Debug.LogError($"[GameSDK.Advertisement]: An show rewarded error has occurred {e.Message}!");
+            }
         }
 
         internal async void OnClosedHandler(IRewardedAds platform)

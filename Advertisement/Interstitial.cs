@@ -79,9 +79,7 @@ namespace GameSDK.Advertisement
                 
                     return;
                 }
-
-                await GameApp.GameStop();
-            
+                
                 foreach (var service in _services)
                 {
                     try
@@ -107,9 +105,19 @@ namespace GameSDK.Advertisement
             }
         }
 
-        private void OnShowedHandler(IInterstitialAds platform)
+        private async void OnShowedHandler(IInterstitialAds platform)
         {
-            OnShowed?.Invoke();
+            try
+            {
+                OnShowed?.Invoke();
+
+                await GameApp.GameStop();
+            }
+            catch (Exception e)
+            {
+                if (GameApp.IsDebugMode)
+                    Debug.LogError($"[GameSDK.Advertisement]: An show interstitial error has occurred {e.Message}!");
+            }
         }
 
         private async void OnClosedHandler(IInterstitialAds platform)
