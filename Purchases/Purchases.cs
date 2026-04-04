@@ -157,6 +157,16 @@ namespace GameSDK.Purchases
             Instance._productTypes.Add(id, productType);
         }
 
+        public static string[] GetRegisteredProductIds()
+        {
+            return Instance._productTypes.Keys.ToArray();
+        }
+
+        public static bool TryGetRegisteredProductType(string id, out ProductType productType)
+        {
+            return Instance._productTypes.TryGetValue(id, out productType);
+        }
+
         public static void RemoveProduct(string id)
         {
             if (Instance._productTypes.ContainsKey(id) == false)
