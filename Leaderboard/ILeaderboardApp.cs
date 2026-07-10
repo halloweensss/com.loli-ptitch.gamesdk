@@ -7,7 +7,7 @@ namespace GameSDK.Leaderboard
     {
         Task Initialize();
         Task<LeaderboardDescription> GetDescription(string id);
-        Task<LeaderboardStatus> SetScore(string id, int score);
+        Task<LeaderboardStatus> SetScore(string id, long score, string extraData);
         Task<(LeaderboardStatus, LeaderboardPlayerData)> GetPlayerData(string id);
         Task<(LeaderboardStatus, LeaderboardEntries)> GetEntries(LeaderboardParameters parameters);
     }

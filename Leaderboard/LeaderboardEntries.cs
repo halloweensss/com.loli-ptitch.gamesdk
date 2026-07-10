@@ -7,14 +7,18 @@ namespace GameSDK.Leaderboard
     {
         public LeaderboardDescription Leaderboard;
         public LeaderboardRange[] Ranges;
-        public int UserRank;
+        public long UserRank;
+        /// <summary>
+        /// Whether the provider returned a rank for the current player.
+        /// </summary>
+        public bool HasUserRank;
         public LeaderboardPlayerData[] Entries;
     }
 
     [Serializable]
     public class LeaderboardRange
     {
-        public int Start;
-        public int Size;
+        public long Start;
+        public long Size;
     }
 }

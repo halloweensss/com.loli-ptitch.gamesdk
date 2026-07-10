@@ -129,7 +129,12 @@ namespace GameSDK.Leaderboard
             return null;
         }
 
-        public static async Task SetScore(string id, int score)
+        public static Task SetScore(string id, long score)
+        {
+            return SetScore(id, score, null);
+        }
+
+        public static async Task SetScore(string id, long score, string extraData)
         {
             if (IsInitialized == false)
                 await Initialize();
@@ -158,7 +163,7 @@ namespace GameSDK.Leaderboard
             foreach (var service in Instance._services)
                 try
                 {
-                    var status = await service.Value.SetScore(id, score);
+                    var status = await service.Value.SetScore(id, score, extraData);
                     if (status != LeaderboardStatus.Success)
                         if (GameApp.IsDebugMode)
                             Debug.LogError($"[GameSDK.Leaderboard]: Error writing data to the leaderboard {id}!");

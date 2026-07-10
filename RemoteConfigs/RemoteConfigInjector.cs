@@ -121,7 +121,18 @@ namespace GameSDK.RemoteConfigs
                     if (deserializerObject.Check(value, valueType) == false)
                         continue;
 
-                    value = deserializerObject.Deserialize(stringValue, value, valueType);
+                    try
+                    {
+                        value = deserializerObject.Deserialize(stringValue, value, valueType);
+                    }
+                    catch (Exception exception)
+                    {
+                        Debug.LogWarning(
+                            $"[GameSDK.RemoteConfigs]: Failed to deserialize key {cachedInfo.Key} " +
+                            $"to type {valueType.Name}. Value: {stringValue}. Error: {exception.Message}");
+                        return;
+                    }
+
                     break;
                 }
 
