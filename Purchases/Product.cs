@@ -14,6 +14,7 @@ namespace GameSDK.Purchases
         public string Price;
         public string PriceValue;
         public string PriceCurrencyCode;
+        public string PriceCurrencyImage;
         public ProductType Type { get; internal set; }
         public bool IsPurchased => _productPurchased is { Count: > 0 };
 
